@@ -1,4 +1,4 @@
-export type QuestionType = 'multiple_choice' | 'fill_in' | 'matching' | 'true_false' | 'essay';
+export type QuestionType = 'multiple_choice' | 'complex_multiple_choice' | 'fill_in' | 'matching' | 'true_false' | 'essay';
 
 export interface Question {
   id: string;

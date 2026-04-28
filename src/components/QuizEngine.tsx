@@ -126,8 +126,17 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
       const results = questions.map(q => {
         const ans = answers[q.id];
         let isCorrect = false;
-        if (q.type === 'multiple_choice' || q.type === 'true_false' || q.type === 'fill_in') {
-          isCorrect = String(ans).toLowerCase() === String(q.correctAnswer).toLowerCase();
+        if (q.type === 'multiple_choice' || q.type === 'true_false' || q.type === 'fill_in' || q.type === 'complex_multiple_choice') {
+          if (q.type === 'complex_multiple_choice') {
+            // Normalize and compare
+            const userSet = new Set(String(ans || '').split(',').map(s => s.trim().toUpperCase()).filter(s => s));
+            const correctSet = new Set(String(q.correctAnswer || '').split(',').map(s => s.trim().toUpperCase()).filter(s => s));
+            
+            isCorrect = userSet.size === correctSet.size && [...userSet].every(val => correctSet.has(val));
+          } else {
+            isCorrect = String(ans || '').toLowerCase() === String(q.correctAnswer || '').toLowerCase();
+          }
+          
           if (isCorrect) {
             totalScore += q.weight;
           }
@@ -355,6 +364,49 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
 
               {/* Interaction Logic for different types */}
               <div className="space-y-3">
+                {currentQuestion.type === 'complex_multiple_choice' && currentQuestion.options?.map((opt, i) => {
+                  const label = String.fromCharCode(65 + i);
+                  const currentAnswers = String(answers[currentQuestion.id] || '').split(',').map(s => s.trim()).filter(s => s);
+                  const isSelected = currentAnswers.includes(label);
+                  
+                  const toggleComplexAnswer = () => {
+                    let newAnswers;
+                    if (isSelected) {
+                      newAnswers = currentAnswers.filter(a => a !== label);
+                    } else {
+                      newAnswers = [...currentAnswers, label].sort();
+                    }
+                    setAnswer(currentQuestion.id, newAnswers.join(','));
+                  };
+
+                  return (
+                    <button
+                      key={i}
+                      onClick={toggleComplexAnswer}
+                      className={cn(
+                        "w-full text-left p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all flex items-center gap-3 sm:gap-4 group",
+                        isSelected 
+                          ? "bg-indigo-600 border-indigo-600 text-white shadow-lg" 
+                          : "bg-white border-gray-100 hover:border-gray-300 text-gray-700"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
+                        isSelected ? "bg-white border-white" : "border-gray-300 group-hover:border-gray-400"
+                      )}>
+                        {isSelected && <CheckCircle size={14} className="text-indigo-600" />}
+                      </div>
+                      <span className={cn(
+                        "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-bold text-xs sm:text-sm border-2 shrink-0",
+                        isSelected ? "bg-white/20 border-white/40" : "bg-gray-50 border-gray-200 group-hover:border-gray-400"
+                      )}>
+                        {label}
+                      </span>
+                      <span className="font-medium text-sm sm:text-base leading-tight">{opt}</span>
+                    </button>
+                  );
+                })}
+
                 {currentQuestion.type === 'multiple_choice' && currentQuestion.options?.map((opt, i) => {
                   const label = String.fromCharCode(65 + i);
                   const isSelected = answers[currentQuestion.id] === label;

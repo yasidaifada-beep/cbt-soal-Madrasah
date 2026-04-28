@@ -20,6 +20,15 @@ export default function AdminDashboard() {
   const [examForm, setExamForm] = useState({ title: '', duration: 60 });
   const [isEditingExam, setIsEditingExam] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [editQuestionForm, setEditQuestionForm] = useState({
+    type: 'multiple_choice' as QuestionType,
+    text: '',
+    options: ['', '', '', '', ''],
+    correctAnswer: '',
+    weight: 2
+  });
 
   // Manual Question Form State
   const [newQuestion, setNewQuestion] = useState({
@@ -27,7 +36,7 @@ export default function AdminDashboard() {
     text: '',
     options: ['', '', '', '', ''],
     correctAnswer: '',
-    weight: 1
+    weight: 2
   });
 
   useEffect(() => {
@@ -112,6 +121,13 @@ export default function AdminDashboard() {
     }
   };
 
+  const getQuestionDefaults = (num: number): { type: QuestionType, weight: number } => {
+    if (num <= 20) return { type: 'multiple_choice', weight: 2 };
+    if (num <= 25) return { type: 'complex_multiple_choice', weight: 4 };
+    if (num <= 30) return { type: 'essay', weight: 8 };
+    return { type: 'multiple_choice', weight: 2 }; // Default fallback
+  };
+
   const handleManualAdd = async () => {
     if (!selectedExamId) return;
     if (!newQuestion.text || !newQuestion.correctAnswer) {
@@ -123,11 +139,18 @@ export default function AdminDashboard() {
       setLoading(true);
       await addDoc(collection(db, `exams/${selectedExamId}/questions`), {
         ...newQuestion,
-        options: newQuestion.type === 'multiple_choice' ? newQuestion.options.filter(o => o.trim() !== '') : [],
+        options: (newQuestion.type === 'multiple_choice' || newQuestion.type === 'complex_multiple_choice') ? newQuestion.options.filter(o => String(o).trim() !== '') : [],
         order: questions.length + 1
       });
       setIsAddingQuestion(false);
-      setNewQuestion({ type: 'multiple_choice', text: '', options: ['', '', '', '', ''], correctAnswer: '', weight: 1 });
+      const nextDefaults = getQuestionDefaults(questions.length + 2);
+      setNewQuestion({ 
+        type: nextDefaults.type, 
+        text: '', 
+        options: ['', '', '', '', ''], 
+        correctAnswer: '', 
+        weight: nextDefaults.weight 
+      });
       fetchQuestions(selectedExamId);
     } catch (error) {
        handleFirestoreError(error, OperationType.CREATE, `exams/${selectedExamId}/questions`);
@@ -143,6 +166,51 @@ export default function AdminDashboard() {
       fetchQuestions(selectedExamId!);
     } catch (error) {
       handleFirestoreError(error, OperationType.DELETE, `questions/${qId}`);
+    }
+  };
+
+  const startEditQuestion = (q: Question) => {
+    setEditingQuestionId(q.id);
+    setEditQuestionForm({
+      type: q.type,
+      text: q.text,
+      options: (q.type === 'multiple_choice' || q.type === 'complex_multiple_choice') ? [...(q.options || []), '', '', '', '', ''].slice(0, 5) : ['', '', '', '', ''],
+      correctAnswer: q.correctAnswer,
+      weight: q.weight
+    });
+  };
+
+  const handleUpdateQuestion = async () => {
+    if (!selectedExamId || !editingQuestionId) return;
+    if (!editQuestionForm.text || !editQuestionForm.correctAnswer) {
+      alert("Harap isi soal dan kunci jawaban.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const qRef = doc(db, `exams/${selectedExamId}/questions`, editingQuestionId);
+      
+      const updateData = {
+        type: editQuestionForm.type,
+        text: editQuestionForm.text,
+        correctAnswer: editQuestionForm.correctAnswer,
+        weight: editQuestionForm.weight,
+        options: (editQuestionForm.type === 'multiple_choice' || editQuestionForm.type === 'complex_multiple_choice') 
+          ? editQuestionForm.options.filter(o => String(o).trim() !== '') 
+          : [],
+      };
+
+      await updateDoc(qRef, updateData);
+      setEditingQuestionId(null);
+      await fetchQuestions(selectedExamId);
+      alert("Berhasil menyimpan perubahan soal.");
+    } catch (error) {
+       console.error("Error updating question:", error);
+       alert("Gagal menyimpan soal: " + (error instanceof Error ? error.message : "Terjadi kesalahan tidak dikenal"));
+       // Do not throw here if we want to handle it with the alert
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -179,9 +247,12 @@ export default function AdminDashboard() {
 
         setLoading(true);
         for (const [index, row] of json.entries()) {
+          const currentNum = questions.length + index + 1;
+          const rangeDefaults = getQuestionDefaults(currentNum);
+
           // Map column names to our internal structure
           // Support both Indonesian specific naming and original mapping
-          const type = row.Tipe || 'multiple_choice';
+          const type = row.Tipe;
           
           // Collect options from various possible column names
           const options = [
@@ -190,17 +261,29 @@ export default function AdminDashboard() {
             row["Opsi Jawaban 3"] || row.OpsiC || "",
             row["Opsi Jawaban 4"] || row.OpsiD || "",
             row["Opsi Jawaban 5"] || row.OpsiE || ""
-          ].filter(o => o !== "");
+          ].map(o => String(o).trim()).filter(o => o !== "");
 
-          const correctAnswer = row["Kunci Jawaban"] || row.JawabanBenar || "";
+          const correctAnswer = String(row["Kunci Jawaban"] || row.JawabanBenar || "").trim();
           
+          let mappedType: QuestionType;
+          if (type === 'Pilihan Ganda') mappedType = 'multiple_choice';
+          else if (type === 'Pilihan Ganda Kompleks') mappedType = 'complex_multiple_choice';
+          else if (type === 'Benar/Salah') mappedType = 'true_false';
+          else if (type === 'Isian') mappedType = 'fill_in';
+          else if (type === 'Matching') mappedType = 'matching';
+          else if (type === 'Uraian') mappedType = 'essay';
+          else if (type) mappedType = type as QuestionType;
+          else mappedType = rangeDefaults.type; // Use range-based default if type not in Excel row
+
+          const weight = Number(row.Bobot) || rangeDefaults.weight;
+
           await addDoc(collection(db, `exams/${examId}/questions`), {
-            type: type === 'Pilihan Ganda' ? 'multiple_choice' : type,
-            text: row.Soal || '',
+            type: mappedType,
+            text: String(row.Soal || "").trim(),
             options,
             correctAnswer,
-            weight: Number(row.Bobot) || 1,
-            order: questions.length + index + 1
+            weight: weight,
+            order: currentNum
           });
         }
         fetchQuestions(examId);
@@ -435,7 +518,13 @@ export default function AdminDashboard() {
                       <span className="text-xl sm:text-2xl font-black text-green-600">
                         {Object.entries(selectedSubmission.answers || {}).filter(([qid, ans]) => {
                           const q = questions.find(q => q.id === qid);
-                          return q && String(ans).toLowerCase() === String(q.correctAnswer).toLowerCase();
+                          if (!q) return false;
+                          if (q.type === 'complex_multiple_choice') {
+                            const userSet = new Set(String(ans || '').split(',').map(s => s.trim().toUpperCase()).filter(s => s));
+                            const correctSet = new Set(String(q.correctAnswer || '').split(',').map(s => s.trim().toUpperCase()).filter(s => s));
+                            return userSet.size === correctSet.size && [...userSet].every(val => correctSet.has(val));
+                          }
+                          return String(ans).toLowerCase() === String(q.correctAnswer).toLowerCase();
                         }).length} / {questions.length}
                       </span>
                     </div>
@@ -453,7 +542,14 @@ export default function AdminDashboard() {
                     <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Detail Per Jawaban</h4>
                     {questions.map((q, i) => {
                       const userAns = selectedSubmission.answers?.[q.id];
-                      const isCorrect = String(userAns).toLowerCase() === String(q.correctAnswer).toLowerCase();
+                      let isCorrect = false;
+                      if (q.type === 'complex_multiple_choice') {
+                        const userSet = new Set(String(userAns || '').split(',').map(s => s.trim().toUpperCase()).filter(s => s));
+                        const correctSet = new Set(String(q.correctAnswer || '').split(',').map(s => s.trim().toUpperCase()).filter(s => s));
+                        isCorrect = userSet.size === correctSet.size && [...userSet].every(val => correctSet.has(val));
+                      } else {
+                        isCorrect = String(userAns || '').toLowerCase() === String(q.correctAnswer || '').toLowerCase();
+                      }
                       
                       return (
                         <div key={q.id} className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-white border border-slate-100 hover:border-slate-200 transition-all shadow-sm">
@@ -581,7 +677,17 @@ export default function AdminDashboard() {
                       />
                     </label>
                     <button 
-                      onClick={() => setIsAddingQuestion(true)}
+                      onClick={() => {
+                        const defaults = getQuestionDefaults(questions.length + 1);
+                        setNewQuestion({
+                          type: defaults.type,
+                          text: '',
+                          options: ['', '', '', '', ''],
+                          correctAnswer: '',
+                          weight: defaults.weight
+                        });
+                        setIsAddingQuestion(true);
+                      }}
                       className="col-span-2 sm:col-auto bg-indigo-600 text-white px-5 py-3 sm:py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors font-bold text-xs"
                     >
                       <Plus size={16} /> Tambah Soal
@@ -642,28 +748,189 @@ export default function AdminDashboard() {
                                     {String(i + 1).padStart(2, '0')}
                                   </span>
                                 </div>
-                                <div className="flex-1 pr-8 sm:pr-12">
-                                  <p className="text-slate-800 font-medium leading-relaxed mb-4 text-sm sm:text-base">{q.text}</p>
-                                  <div className="flex flex-wrap gap-2">
-                                    <span className={cn(
-                                      "text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full border uppercase",
-                                      q.type === 'multiple_choice' ? "bg-blue-50 text-blue-600 border-blue-100" :
-                                      q.type === 'essay' ? "bg-amber-50 text-amber-600 border-amber-100" :
-                                      "bg-slate-200 text-slate-600 border-slate-200"
-                                    )}>
-                                      {q.type === 'multiple_choice' ? 'Pilihan Ganda' : 
-                                       q.type === 'true_false' ? 'Benar/Salah' : 
-                                       q.type === 'fill_in' ? 'Isian' : 
-                                       q.type === 'essay' ? 'Uraian' : q.type}
-                                    </span>
-                                    <span className="text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full bg-slate-800 text-white uppercase">KUNCI: {q.correctAnswer}</span>
-                                    <span className="text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-400 uppercase">Bobot: {q.weight}</span>
-                                  </div>
+                                 <div className="flex-1 pr-8 sm:pr-12">
+                                  {editingQuestionId === q.id ? (
+                                    /* Inline Edit Form */
+                                    <div className="space-y-4">
+                                      <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block">Teks Pertanyaan</label>
+                                        <textarea 
+                                          value={editQuestionForm.text}
+                                          onChange={(e) => setEditQuestionForm({...editQuestionForm, text: e.target.value})}
+                                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:border-indigo-600 outline-none font-medium text-sm"
+                                          rows={3}
+                                        />
+                                      </div>
+                                      
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                          <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block">Tipe</label>
+                                          <select 
+                                            value={editQuestionForm.type}
+                                            onChange={(e) => {
+                                              const newType = e.target.value as QuestionType;
+                                              let newWeight = editQuestionForm.weight;
+                                              if (newType === 'multiple_choice') newWeight = 2;
+                                              else if (newType === 'complex_multiple_choice') newWeight = 4;
+                                              else if (newType === 'essay') newWeight = 8;
+                                              setEditQuestionForm({ ...editQuestionForm, type: newType, weight: newWeight });
+                                            }}
+                                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 focus:border-indigo-600 outline-none font-bold text-xs"
+                                          >
+                                            <option value="multiple_choice">Pilihan Ganda</option>
+                                            <option value="complex_multiple_choice">Pilihan Ganda Kompleks</option>
+                                            <option value="true_false">Benar / Salah</option>
+                                            <option value="fill_in">Isian Singkat</option>
+                                            <option value="essay">Uraian</option>
+                                          </select>
+                                        </div>
+                                        <div>
+                                          <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block">Bobot</label>
+                                          <input 
+                                            type="number"
+                                            value={editQuestionForm.weight}
+                                            onChange={(e) => setEditQuestionForm({...editQuestionForm, weight: parseInt(e.target.value) || 1})}
+                                            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 focus:border-indigo-600 outline-none font-bold text-xs"
+                                          />
+                                        </div>
+                                      </div>
+
+                                      {(editQuestionForm.type === 'multiple_choice' || editQuestionForm.type === 'complex_multiple_choice') && (
+                                        <div className="space-y-2">
+                                          <label className="text-[10px] font-black text-slate-400 uppercase mb-1 block">Opsi</label>
+                                          {['A', 'B', 'C', 'D', 'E'].map((label, idx) => (
+                                            <div key={label} className="flex gap-2 items-center">
+                                              <span className="w-6 h-6 rounded bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-[10px]">{label}</span>
+                                              <input 
+                                                value={editQuestionForm.options[idx] || ''}
+                                                onChange={(e) => {
+                                                  const opts = [...editQuestionForm.options];
+                                                  opts[idx] = e.target.value;
+                                                  setEditQuestionForm({...editQuestionForm, options: opts});
+                                                }}
+                                                className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-1.5 focus:border-indigo-600 outline-none text-xs"
+                                                placeholder={`Opsi ${label}...`}
+                                              />
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+
+                                      <div>
+                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block">Kunci Jawaban {editQuestionForm.type === 'complex_multiple_choice' && "(Gunakan koma untuk >1 jawaban, misal: A,B)"}</label>
+                                        <input 
+                                          value={editQuestionForm.correctAnswer}
+                                          onChange={(e) => setEditQuestionForm({...editQuestionForm, correctAnswer: e.target.value})}
+                                          placeholder="Masukkan kunci jawaban"
+                                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 focus:border-indigo-600 outline-none font-bold text-xs"
+                                        />
+                                      </div>
+
+                                      <div className="flex gap-2 pt-2">
+                                        <button 
+                                          onClick={handleUpdateQuestion}
+                                          className="flex-1 bg-indigo-600 text-white py-2 rounded-xl font-bold text-xs hover:bg-opacity-90"
+                                        >
+                                          SIMPAN
+                                        </button>
+                                        <button 
+                                          onClick={() => setEditingQuestionId(null)}
+                                          className="px-4 py-2 text-slate-400 font-bold text-xs hover:text-slate-600"
+                                        >
+                                          BATAL
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <p className="text-slate-800 font-medium leading-relaxed mb-4 text-sm sm:text-base">{q.text}</p>
+                                      <div className="flex flex-wrap gap-2">
+                                        <span className={cn(
+                                          "text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full border uppercase",
+                                          (q.type === 'multiple_choice' || q.type === 'complex_multiple_choice') ? "bg-blue-50 text-blue-600 border-blue-100" :
+                                          q.type === 'essay' ? "bg-amber-50 text-amber-600 border-amber-100" :
+                                          "bg-slate-200 text-slate-600 border-slate-200"
+                                        )}>
+                                          {q.type === 'multiple_choice' ? 'Pilihan Ganda' : 
+                                           q.type === 'complex_multiple_choice' ? 'Pilihan Ganda Kompleks' :
+                                           q.type === 'true_false' ? 'Benar/Salah' : 
+                                           q.type === 'fill_in' ? 'Isian' : 
+                                           q.type === 'essay' ? 'Uraian' : q.type}
+                                        </span>
+                                        <span className="text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full bg-slate-800 text-white uppercase">KUNCI: {q.correctAnswer}</span>
+                                        <span className="text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-400 uppercase">Bobot: {q.weight}</span>
+                                      </div>
+                                    </>
+                                  )}
+
+                                  {/* Detail Soal */}
+                                  <AnimatePresence>
+                                    {expandedQuestionId === q.id && (
+                                      <motion.div 
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: 'auto', opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        className="overflow-hidden"
+                                      >
+                                        <div className="mt-6 pt-6 border-t border-slate-200/50 space-y-4">
+                                          {(q.type === 'multiple_choice' || q.type === 'complex_multiple_choice') && q.options && (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                              {q.options.map((opt, idx) => {
+                                                const label = String.fromCharCode(65 + idx);
+                                                const isCorrect = q.type === 'complex_multiple_choice' 
+                                                  ? q.correctAnswer.split(',').map((s: string) => s.trim()).includes(label)
+                                                  : label === q.correctAnswer;
+                                                return (
+                                                  <div key={idx} className={cn(
+                                                    "p-3 rounded-xl border text-sm flex gap-3 items-center",
+                                                    isCorrect ? "bg-indigo-50 border-indigo-200 text-indigo-700 font-bold" : "bg-white border-slate-100 text-slate-500"
+                                                  )}>
+                                                    <span className={cn(
+                                                      "w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black shrink-0",
+                                                      isCorrect ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-400"
+                                                    )}>{label}</span>
+                                                    <span className="truncate">{opt}</span>
+                                                  </div>
+                                                );
+                                              })}
+                                            </div>
+                                          )}
+                                          {q.type !== 'multiple_choice' && (
+                                            <div className="bg-white p-4 rounded-xl border border-slate-100">
+                                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Kunci Jawaban Terdaftar</span>
+                                              <p className="font-bold text-slate-700 text-sm sm:text-base">{q.correctAnswer}</p>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
                                 </div>
-                                <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-40 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                   <button onClick={() => deleteQuestion(q.id)} className="text-rose-400 hover:text-rose-600 p-2">
-                                     <Trash2 size={18} />
-                                   </button>
+                                 <div className="absolute top-4 sm:top-6 right-4 sm:right-6 flex items-center gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                   {!editingQuestionId && (
+                                     <>
+                                       <button 
+                                         onClick={() => setExpandedQuestionId(expandedQuestionId === q.id ? null : q.id)}
+                                         className={cn(
+                                           "p-2 rounded-lg transition-colors",
+                                           expandedQuestionId === q.id ? "bg-indigo-600 text-white" : "text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                         )}
+                                         title="Lihat Detail Soal"
+                                       >
+                                         <AlignLeft size={18} />
+                                       </button>
+                                       <button 
+                                         onClick={() => startEditQuestion(q)}
+                                         className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                                         title="Edit Soal"
+                                       >
+                                         <Edit3 size={18} />
+                                       </button>
+                                       <button onClick={() => deleteQuestion(q.id)} className="text-rose-400 hover:text-rose-600 hover:bg-rose-50 p-2 rounded-lg transition-colors">
+                                         <Trash2 size={18} />
+                                       </button>
+                                     </>
+                                   )}
                                 </div>
                               </div>
                             </div>
@@ -694,10 +961,18 @@ export default function AdminDashboard() {
                               <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Tipe Soal</label>
                               <select 
                                 value={newQuestion.type}
-                                onChange={(e) => setNewQuestion({...newQuestion, type: e.target.value as QuestionType})}
+                                onChange={(e) => {
+                                  const newType = e.target.value as QuestionType;
+                                  let newWeight = newQuestion.weight;
+                                  if (newType === 'multiple_choice') newWeight = 2;
+                                  else if (newType === 'complex_multiple_choice') newWeight = 4;
+                                  else if (newType === 'essay') newWeight = 8;
+                                  setNewQuestion({ ...newQuestion, type: newType, weight: newWeight });
+                                }}
                                 className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:border-indigo-600 outline-none font-bold"
                               >
                                 <option value="multiple_choice">Pilihan Ganda</option>
+                                <option value="complex_multiple_choice">Pilihan Ganda Kompleks</option>
                                 <option value="true_false">Benar / Salah</option>
                                 <option value="fill_in">Isian Singkat</option>
                                 <option value="essay">Uraian</option>
@@ -724,7 +999,7 @@ export default function AdminDashboard() {
                             />
                           </div>
 
-                          {newQuestion.type === 'multiple_choice' && (
+                          {(newQuestion.type === 'multiple_choice' || newQuestion.type === 'complex_multiple_choice') && (
                             <div className="space-y-3">
                               <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Opsi Jawaban</label>
                               {['A', 'B', 'C', 'D', 'E'].map((label, idx) => (
@@ -746,7 +1021,7 @@ export default function AdminDashboard() {
                           )}
 
                           <div>
-                            <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Kunci Jawaban</label>
+                            <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Kunci Jawaban {newQuestion.type === 'complex_multiple_choice' && "(Pisahkan dengan koma, misal: A,B)"}</label>
                             {newQuestion.type === 'multiple_choice' ? (
                               <select 
                                 value={newQuestion.correctAnswer}
