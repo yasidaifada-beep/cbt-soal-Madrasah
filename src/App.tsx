@@ -6,6 +6,7 @@ import { UserProfile, Exam } from './types';
 import AdminDashboard from './components/AdminDashboard';
 import QuizEngine from './components/QuizEngine';
 import { LogIn, GraduationCap, ShieldCheck, LogOut, FileText, ChevronRight, Calculator, Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { cn } from './lib/utils';
 
@@ -13,10 +14,12 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState<'home' | 'admin' | 'exam'>('home');
+  const [activeView, setActiveView] = useState<'home' | 'admin' | 'exam' | 'identity'>('home');
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const [exams, setExams] = useState<Exam[]>([]);
   const [finishedScore, setFinishedScore] = useState<number | null>(null);
+  const [studentName, setStudentName] = useState('');
+  const [participantNumber, setParticipantNumber] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
@@ -42,7 +45,7 @@ export default function App() {
           
           const newProfile: UserProfile = {
             uid: u.uid,
-            name: u.displayName || 'Anon',
+            name: u.displayName || 'Pengguna',
             email: u.email || '',
             role: isAdminEmail ? 'admin' : 'student' 
           };
@@ -89,6 +92,15 @@ export default function App() {
   const startExam = (examId: string) => {
     setSelectedExamId(examId);
     setFinishedScore(null);
+    setStudentName(profile?.name || '');
+    setActiveView('identity');
+  };
+
+  const confirmIdentityAndStart = () => {
+    if (!studentName.trim() || !participantNumber.trim()) {
+      alert("Harap lengkapi Nama dan Nomor Peserta!");
+      return;
+    }
     setActiveView('exam');
   };
 
@@ -110,7 +122,7 @@ export default function App() {
         <div className="w-16 h-16 sm:w-20 h-20 bg-[#1a1a1a] rounded-[20px] sm:rounded-[24px] flex items-center justify-center mb-6 sm:mb-8 shadow-xl shadow-black/20">
           <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-[#1a1a1a] tracking-tight mb-2">CBT Pintar</h1>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-[#1a1a1a] tracking-tight mb-2">CBT SOAL MADRASAH</h1>
         <p className="text-[#9e9e9e] mb-8 sm:mb-12 leading-relaxed text-sm sm:text-base">Sistem Ujian Berbasis Komputer Modern.<br className="hidden sm:block"/> Cepat, Aman, dan Efisien.</p>
         
         <div className="w-full">
@@ -127,7 +139,73 @@ export default function App() {
   );
 
   if (activeView === 'exam' && selectedExamId) {
-    return <QuizEngine examId={selectedExamId} onFinish={onExamFinish} />;
+    return (
+      <QuizEngine 
+        examId={selectedExamId} 
+        onFinish={onExamFinish} 
+        studentName={studentName}
+        participantNumber={participantNumber}
+      />
+    );
+  }
+
+  if (activeView === 'identity' && selectedExamId) {
+    const exam = exams.find(e => e.id === selectedExamId);
+    return (
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center p-4 sm:p-6">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md w-full bg-white rounded-[32px] sm:rounded-[40px] p-8 sm:p-12 shadow-2xl shadow-black/5 border border-gray-100"
+        >
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-[#1a1a1a] rounded-[20px] flex items-center justify-center mb-6 mx-auto">
+              <ShieldCheck className="text-white" size={32} />
+            </div>
+            <h2 className="text-2xl font-black text-[#1a1a1a] mb-2 uppercase tracking-tight">Konfirmasi Identitas</h2>
+            <p className="text-gray-400 text-sm">{exam?.title}</p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1 mb-1 block">Nama Lengkap Peserta</label>
+              <input 
+                type="text"
+                value={studentName}
+                onChange={(e) => setStudentName(e.target.value)}
+                placeholder="Contoh: Ahmad Abdullah"
+                className="w-full bg-gray-50 p-4 rounded-xl border border-gray-100 outline-none focus:border-[#1a1a1a] focus:ring-4 focus:ring-black/5 transition-all font-bold"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1 mb-1 block">Nomor Peserta / NISN</label>
+              <input 
+                type="text"
+                value={participantNumber}
+                onChange={(e) => setParticipantNumber(e.target.value)}
+                placeholder="Contoh: 0012345678"
+                className="w-full bg-gray-50 p-4 rounded-xl border border-gray-100 outline-none focus:border-[#1a1a1a] focus:ring-4 focus:ring-black/5 transition-all font-bold"
+              />
+            </div>
+          </div>
+
+          <div className="mt-10 flex flex-col gap-3">
+            <button 
+              onClick={confirmIdentityAndStart}
+              className="w-full bg-[#1a1a1a] text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-black/10 hover:bg-opacity-90 active:scale-95 transition-all"
+            >
+              KONFIRMASI & MULAI <ChevronRight size={18} />
+            </button>
+            <button 
+              onClick={() => setActiveView('home')}
+              className="w-full py-4 text-gray-400 font-bold text-sm hover:text-gray-600"
+            >
+              Batalkan
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
   }
 
   if (activeView === 'admin' && profile?.role === 'admin') {
@@ -135,7 +213,7 @@ export default function App() {
       <div className="min-h-screen bg-white">
         <div className="bg-[#1a1a1a] p-3 flex justify-end px-4 sm:px-8">
            <button onClick={() => setActiveView('home')} className="text-[10px] sm:text-xs text-white/60 hover:text-white font-bold flex items-center gap-1">
-             <ChevronRight className="rotate-180" size={14}/> KEMBALI KE HOME
+             <ChevronRight className="rotate-180" size={14}/> KEMBALI KE BERANDA
            </button>
         </div>
         <AdminDashboard />
@@ -151,7 +229,7 @@ export default function App() {
              <GraduationCap size={18} className="text-white sm:size-5" />
           </div>
           <div className="truncate">
-            <h1 className="font-extrabold text-base sm:text-xl tracking-tight text-[#1a1a1a] truncate">CBT Pintar</h1>
+            <h1 className="font-extrabold text-base sm:text-xl tracking-tight text-[#1a1a1a] truncate">CBT SOAL MADRASAH</h1>
             <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-none">{profile?.role}</p>
           </div>
         </div>

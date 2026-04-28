@@ -9,9 +9,11 @@ import { motion, AnimatePresence } from 'motion/react';
 interface QuizEngineProps {
   examId: string;
   onFinish: (score: number) => void;
+  studentName?: string;
+  participantNumber?: string;
 }
 
-export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
+export default function QuizEngine({ examId, onFinish, studentName, participantNumber }: QuizEngineProps) {
   const [exam, setExam] = useState<Exam | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -78,6 +80,8 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
         await setDoc(subRef, {
           examId,
           userId: user.uid,
+          studentName: studentName || 'Siswa',
+          participantNumber: participantNumber || '-',
           status: 'started',
           startedAt: serverTimestamp(),
           answers: {}
@@ -214,7 +218,7 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
 
           <div className="space-y-6">
             <h3 className="text-xl sm:text-2xl font-black text-[#1a1a1a] mb-6 flex items-center gap-3">
-              <RefreshCw size={24} className="text-indigo-600" /> Review Jawaban
+              <RefreshCw size={24} className="text-indigo-600" /> Tinjau Jawaban
             </h3>
             {reviewData.results.map((res, i) => (
               <div key={res.questionId} className="bg-white rounded-[24px] sm:rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
@@ -473,7 +477,7 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
                <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">{Object.keys(answers).length}/{questions.length} Selesai</span>
             </div>
          </div>
-         <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6">
             <div className="grid grid-cols-6 sm:grid-cols-10 lg:grid-cols-4 gap-2 sm:gap-3">
               {questions.map((q, i) => {
                 const isAnswered = !!answers[q.id];
@@ -488,13 +492,14 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
                       "aspect-square rounded-lg sm:rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold transition-all relative overflow-hidden border-2",
                       isActive ? "ring-4 ring-black/5 scale-105 z-10 border-[#1a1a1a]" : "border-transparent",
                       isFlagged 
-                        ? "bg-yellow-400 text-black" 
+                        ? "bg-yellow-400 text-black shadow-inner" 
                         : isAnswered 
-                          ? "bg-green-600 text-white" 
-                          : "bg-white text-gray-400 hover:bg-gray-200"
+                          ? "bg-green-600 text-white shadow-md" 
+                          : "bg-white text-gray-400 hover:bg-gray-100 hover:border-gray-200"
                     )}
                   >
                     {i + 1}
+                    {isFlagged && <div className="absolute top-0 right-0 w-2 h-2 bg-rose-500 rounded-bl-sm"></div>}
                   </button>
                 );
               })}

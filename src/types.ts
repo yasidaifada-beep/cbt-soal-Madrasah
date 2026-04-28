@@ -31,6 +31,8 @@ export interface Submission {
   id: string;
   examId: string;
   userId: string;
+  studentName?: string;
+  participantNumber?: string;
   answers: Record<string, any>;
   status: 'started' | 'submitted';
   startedAt: any;

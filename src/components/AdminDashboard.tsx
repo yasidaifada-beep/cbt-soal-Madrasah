@@ -215,25 +215,31 @@ export default function AdminDashboard() {
   };
 
   const deleteExam = async (id: string) => {
-    if (!confirm("Hapus ujian ini secara permanen? Seluruh soal dan hasil pengerjaan siswa akan ikut terhapus.")) return;
+    if (!confirm("PERINGATAN: Hapus ujian ini secara permanen? Seluruh soal, data analisis, dan hasil pengerjaan siswa di dalamnya akan ikut terhapus dan tidak bisa dikembalikan.")) return;
     try {
       setLoading(true);
       
       // 1. Delete associated questions (subcollection)
       const qSnap = await getDocs(collection(db, `exams/${id}/questions`));
-      const qDeletes = qSnap.docs.map(d => deleteDoc(d.ref));
+      for (const d of qSnap.docs) {
+        await deleteDoc(d.ref);
+      }
       
       // 2. Delete associated submissions (top-level collection with examId)
       const sQuery = query(collection(db, 'submissions'), where('examId', '==', id));
       const sSnap = await getDocs(sQuery);
-      const sDeletes = sSnap.docs.map(d => deleteDoc(d.ref));
+      for (const d of sSnap.docs) {
+        await deleteDoc(d.ref);
+      }
       
-      // 3. Perform all deletions
-      await Promise.all([...qDeletes, ...sDeletes, deleteDoc(doc(db, 'exams', id))]);
+      // 3. Delete the exam itself
+      await deleteDoc(doc(db, 'exams', id));
       
       await fetchExams();
       if (selectedExamId === id) setSelectedExamId(null);
+      alert("Ujian berhasil dihapus beserta seluruh datanya.");
     } catch (error) {
+      console.error("Delete Exam Error:", error);
       handleFirestoreError(error, OperationType.DELETE, `exams/${id}`);
     } finally {
       setLoading(false);
@@ -269,7 +275,8 @@ export default function AdminDashboard() {
     if (!selectedExamId || submissions.length === 0) return;
     const exam = exams.find(e => e.id === selectedExamId);
     const data = submissions.map(sub => ({
-      'Nama Siswa': userMap[sub.userId]?.name || 'Siswa',
+      'Nama Siswa': sub.studentName || userMap[sub.userId]?.name || 'Siswa',
+      'No. Peserta': sub.participantNumber || '-',
       'Email': userMap[sub.userId]?.email || '',
       'Skor': sub.score || 0,
       'Status': sub.status,
@@ -335,7 +342,7 @@ export default function AdminDashboard() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
               <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shrink-0"><ShieldCheck size={24} /></div>
-              CMS <span className="text-indigo-600">Admin</span>
+              KONTROL <span className="text-indigo-600">ADMIN</span>
             </h1>
             <p className="text-slate-500 mt-1 font-medium italic text-sm">Sistem Manajemen Bank Soal & Ujian</p>
           </div>
@@ -406,7 +413,13 @@ export default function AdminDashboard() {
                 <div className="flex justify-between items-center mb-6 sm:mb-8 border-b pb-6">
                   <div className="truncate pr-4">
                     <h3 className="text-xl sm:text-2xl font-black text-slate-800 truncate">Analisis Pengerjaan</h3>
-                    <p className="text-slate-400 font-bold text-xs sm:text-sm truncate">{userMap[selectedSubmission.userId]?.name} - {exams.find(e => e.id === selectedExamId)?.title}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-slate-400 font-bold text-xs sm:text-sm">
+                      <span className="text-indigo-600 truncate">{selectedSubmission.studentName || userMap[selectedSubmission.userId]?.name}</span>
+                      <span className="hidden sm:inline opacity-30">|</span>
+                      <span>No: {selectedSubmission.participantNumber || '-'}</span>
+                      <span className="hidden sm:inline opacity-30">|</span>
+                      <span className="truncate">{exams.find(e => e.id === selectedExamId)?.title}</span>
+                    </div>
                   </div>
                   <button onClick={() => setSelectedSubmission(null)} className="p-2 sm:p-3 hover:bg-slate-100 rounded-2xl transition-colors shrink-0"><X/></button>
                 </div>
@@ -489,14 +502,31 @@ export default function AdminDashboard() {
                     selectedExamId === exam.id ? "bg-indigo-600 text-white border-transparent" : "bg-slate-50 border-slate-100 hover:border-indigo-200 shadow-sm"
                   )}
                 >
-                  <p className="font-bold truncate pr-6 text-sm">{exam.title}</p>
+                  <p className={cn("font-bold truncate pr-10 text-sm", selectedExamId === exam.id ? "text-white" : "text-slate-800")}>{exam.title}</p>
                   <div className="flex justify-between items-center mt-1">
                     <span className={cn("text-[9px] uppercase font-black px-2 py-0.5 rounded", selectedExamId === exam.id ? "bg-white/20" : "bg-slate-200 text-slate-500")}>
-                      {exam.status}
+                      {exam.status === 'active' ? 'AKTIF' : exam.status === 'closed' ? 'DITUTUP' : 'DRAF'}
                     </span>
-                    <span className="text-[9px] opacity-60 font-bold">{exam.durationMinutes}m</span>
+                    <span className="text-[10px] sm:text-[9px] opacity-60 font-bold">{exam.durationMinutes}m</span>
                   </div>
-                  {selectedExamId === exam.id && <div className="absolute right-3 top-1/2 -translate-y-1/2 lg:block hidden"><ChevronRight size={16} /></div>}
+                  
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteExam(exam.id);
+                    }}
+                    className={cn(
+                      "absolute top-2 right-2 p-2 rounded-xl transition-all",
+                      selectedExamId === exam.id 
+                        ? "bg-white/20 hover:bg-rose-500 text-white" 
+                        : "bg-white border text-slate-400 hover:text-rose-500 hover:bg-rose-50 opacity-100 sm:opacity-0 group-hover:opacity-100"
+                    )}
+                    title="Hapus Ujian & Semua Data"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+
+                  {selectedExamId === exam.id && <div className="absolute right-3 top-1/2 translate-y-1 lg:block hidden opacity-20"><ChevronRight size={16} /></div>}
                 </div>
               ))}
               {exams.length === 0 && <p className="text-center py-8 text-slate-300 font-medium text-sm">Belum ada ujian.</p>}
@@ -621,10 +651,13 @@ export default function AdminDashboard() {
                                       q.type === 'essay' ? "bg-amber-50 text-amber-600 border-amber-100" :
                                       "bg-slate-200 text-slate-600 border-slate-200"
                                     )}>
-                                      {q.type.replace('_', ' ')}
+                                      {q.type === 'multiple_choice' ? 'Pilihan Ganda' : 
+                                       q.type === 'true_false' ? 'Benar/Salah' : 
+                                       q.type === 'fill_in' ? 'Isian' : 
+                                       q.type === 'essay' ? 'Uraian' : q.type}
                                     </span>
                                     <span className="text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full bg-slate-800 text-white uppercase">KUNCI: {q.correctAnswer}</span>
-                                    <span className="text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-400 uppercase">Weight: {q.weight}</span>
+                                    <span className="text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full bg-white border border-slate-200 text-slate-400 uppercase">Bobot: {q.weight}</span>
                                   </div>
                                 </div>
                                 <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-40 sm:opacity-0 group-hover:opacity-100 transition-opacity">
@@ -781,11 +814,15 @@ export default function AdminDashboard() {
                         <div key={sub.id} className="bg-slate-50 border border-slate-100 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:shadow-md transition-shadow">
                           <div className="flex items-center gap-3 sm:gap-4 truncate w-full sm:w-auto">
                             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-100 text-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center font-black shrink-0">
-                              {userMap[sub.userId]?.name?.[0] || 'S'}
+                              {(sub.studentName || userMap[sub.userId]?.name)?.[0] || 'S'}
                             </div>
                             <div className="truncate">
-                              <p className="font-black text-slate-800 truncate text-sm sm:text-base">{userMap[sub.userId]?.name || 'Siswa'}</p>
-                              <p className="text-[10px] sm:text-xs text-slate-400 truncate">{sub.submittedAt?.toDate().toLocaleDateString() || 'Aktif'}</p>
+                              <p className="font-black text-slate-800 truncate text-sm sm:text-base">{sub.studentName || userMap[sub.userId]?.name || 'Siswa'}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-tight">{sub.participantNumber || '-'}</p>
+                                <span className="text-[8px] opacity-30 text-slate-400">•</span>
+                                <p className="text-[10px] sm:text-xs text-slate-400 truncate">{sub.submittedAt?.toDate().toLocaleDateString() || 'Aktif'}</p>
+                              </div>
                             </div>
                           </div>
                           <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-0 pt-4 sm:pt-0">
