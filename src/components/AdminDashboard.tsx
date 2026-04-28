@@ -241,6 +241,15 @@ export default function AdminDashboard() {
     XLSX.writeFile(workbook, `Hasil_Ujian_${exam?.title || 'Export'}.xlsx`);
   };
 
+  const updateStatus = async (exam: Exam, status: 'active' | 'closed' | 'draft') => {
+    try {
+      await updateDoc(doc(db, 'exams', exam.id), { status });
+      fetchExams();
+    } catch (error) {
+       handleFirestoreError(error, OperationType.UPDATE, `exams/${exam.id}`);
+    }
+  };
+
   const updateExamDetails = async () => {
     if (!selectedExamId || !examForm.title.trim()) return;
     try {
@@ -802,7 +811,7 @@ export default function AdminDashboard() {
                       <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Daftar Pengguna Terdaftar ({Object.keys(userMap).length})</h3>
                     </div>
                     <div className="grid grid-cols-1 gap-4">
-                      {Object.values(userMap).map(usr => (
+                      {(Object.values(userMap) as UserProfile[]).map(usr => (
                         <div key={usr.uid} className="bg-slate-50 border border-slate-100 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                           <div className="flex items-center gap-4">
                              <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center font-black", usr.role === 'admin' ? "bg-indigo-600 text-white" : "bg-slate-200 text-slate-500")}>

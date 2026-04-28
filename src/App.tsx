@@ -113,22 +113,15 @@ export default function App() {
         <h1 className="text-4xl font-extrabold text-[#1a1a1a] tracking-tight mb-2">CBT Pintar</h1>
         <p className="text-[#9e9e9e] mb-12 leading-relaxed">Sistem Ujian Berbasis Komputer Modern.<br/>Cepat, Aman, dan Efisien.</p>
         
-        <div className="flex flex-col gap-4 w-full">
+        <div className="w-full">
           <button 
             onClick={login}
             className="w-full bg-[#1a1a1a] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-opacity-90 transition-all shadow-lg shadow-black/10 active:scale-95"
           >
-            <GraduationCap size={20} /> Masuk sebagai Siswa
-          </button>
-          
-          <button 
-            onClick={login}
-            className="w-full bg-white text-[#1a1a1a] py-4 rounded-2xl font-bold flex items-center justify-center gap-3 border-2 border-[#1a1a1a] hover:bg-gray-50 transition-all active:scale-95"
-          >
-            <ShieldCheck size={20} /> Masuk sebagai Guru
+            <LogIn size={20} /> Masuk dengan Google
           </button>
         </div>
-        <p className="mt-8 text-xs text-gray-400">Akses aplikasi menggunakan akun Google terdaftar.</p>
+        <p className="mt-8 text-xs text-slate-400">Gunakan akun Google Anda untuk mulai mengerjakan ujian.</p>
       </div>
     </div>
   );
