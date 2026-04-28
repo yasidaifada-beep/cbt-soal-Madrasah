@@ -1,0 +1,6 @@
+{
+  "name": "CBT Pintar - Sistem Ujian Berbasis Komputer",
+  "description": "Aplikasi CBT Fullstack terintegrasi Firebase dengan fitur Admin Dashboard (Upload Excel, CRUD Soal) dan Interface Ujian (TKA Style, Real-time Sync, Autosave).",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

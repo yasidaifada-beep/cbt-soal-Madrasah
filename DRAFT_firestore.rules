@@ -1,0 +1,99 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isAdmin() {
+      return isSignedIn() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // User Collections
+    match /users/{userId} {
+      function isValidUser(data) {
+        return data.keys().hasAll(['uid', 'email', 'role']) &&
+               data.keys().size() >= 3 &&
+               data.uid == request.auth.uid &&
+               data.email is string &&
+               data.role in ['admin', 'student'];
+      }
+
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isOwner(userId) && isValidUser(incoming());
+      allow update: if isSignedIn() && isOwner(userId) && isValidUser(incoming()) && 
+                        incoming().diff(existing()).affectedKeys().hasOnly(['name', 'email']);
+    }
+
+    // Exam Collections
+    match /exams/{examId} {
+      function isValidExam(data) {
+        return data.keys().hasAll(['title', 'durationMinutes', 'status']) &&
+               data.title is string && data.title.size() <= 500 &&
+               data.durationMinutes is number && data.durationMinutes > 0 &&
+               data.status in ['draft', 'active', 'closed'];
+      }
+
+      allow read: if isSignedIn();
+      allow create, update: if isAdmin() && isValidExam(incoming());
+      allow delete: if isAdmin();
+      
+      // Question Subcollection
+      match /questions/{questionId} {
+        function isValidQuestion(data) {
+          return data.keys().hasAll(['type', 'text', 'weight', 'order']) &&
+                 data.type in ['multiple_choice', 'fill_in', 'matching', 'true_false', 'essay'] &&
+                 data.text is string && data.text.size() <= 10000 &&
+                 data.weight is number && data.order is number;
+        }
+
+        allow read: if isSignedIn();
+        allow write: if isAdmin() && isValidQuestion(incoming());
+      }
+    }
+
+    // Submissions
+    match /submissions/{submissionId} {
+      function isValidSubmission(data) {
+        return data.keys().hasAll(['examId', 'userId', 'status']) &&
+               data.examId is string && data.userId == request.auth.uid &&
+               data.status in ['started', 'submitted'];
+      }
+
+      allow read: if isSignedIn() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow create: if isSignedIn() && isValidSubmission(incoming());
+      allow update: if isSignedIn() && (
+        // Student autosave/submit
+        (resource.data.userId == request.auth.uid && 
+         resource.data.status == 'started' &&
+         isValidSubmission(incoming()) &&
+         incoming().diff(existing()).affectedKeys().hasAny(['answers', 'status', 'submittedAt', 'score'])) ||
+        // Admin grading
+        (isAdmin() && incoming().diff(existing()).affectedKeys().hasAny(['score', 'isGraded']))
+      );
+    }
+  }
+}

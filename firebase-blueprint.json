@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "student"] }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Exam": {
+      "title": "Exam",
+      "description": "Examination metadata",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "durationMinutes": { "type": "number" },
+        "status": { "type": "string", "enum": ["draft", "active", "closed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "durationMinutes", "status"]
+    },
+    "Question": {
+      "title": "Question",
+      "description": "Individiual question in an exam",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["multiple_choice", "fill_in", "matching", "true_false", "essay"] },
+        "text": { "type": "string" },
+        "options": { "type": "array", "description": "For multiple choice or matching" },
+        "correctAnswer": { "type": "string", "description": "Correct answer or mapping" },
+        "weight": { "type": "number" },
+        "order": { "type": "number" }
+      },
+      "required": ["type", "text", "weight", "order"]
+    },
+    "Submission": {
+      "title": "Submission",
+      "description": "Student exam submission",
+      "type": "object",
+      "properties": {
+        "examId": { "type": "string" },
+        "userId": { "type": "string" },
+        "answers": { "type": "object" },
+        "status": { "type": "string", "enum": ["started", "submitted"] },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "submittedAt": { "type": "string", "format": "date-time" },
+        "score": { "type": "number" },
+        "isGraded": { "type": "boolean" }
+      },
+      "required": ["examId", "userId", "status"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "exams/{examId}": {
+      "schema": "Exam",
+      "description": "Exam metadata"
+    },
+    "exams/{examId}/questions/{questionId}": {
+      "schema": "Question",
+      "description": "Questions for an exam"
+    },
+    "submissions/{submissionId}": {
+      "schema": "Submission",
+      "description": "Student submissions"
+    }
+  }
+}
