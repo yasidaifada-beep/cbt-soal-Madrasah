@@ -33,21 +33,19 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSignedIn();
       allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isSignedIn() && isOwner(userId) && 
-                        (isAdmin() || 
-                         request.auth.token.email == 'yasidaifada@gmail.com' ||
-                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'email']));
+      allow update: if isAdmin() || (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'email']));
+      allow delete: if isAdmin() && 
+                    get(/databases/$(database)/documents/users/$(userId)).data.email != 'yasidaifada@gmail.com';
     }
 
     // Exam Collections
     match /exams/{examId} {
       allow read: if isSignedIn();
-      allow create, update: if isAdmin();
-      allow delete: if isAdmin();
+      allow create, update, delete: if isAdmin();
       
       match /questions/{questionId} {
         allow read: if isSignedIn();
-        allow write: if isAdmin();
+        allow write, delete: if isAdmin();
       }
     }
 
@@ -60,6 +58,7 @@ service cloud.firestore {
         isAdmin() || 
         (resource.data.userId == request.auth.uid && resource.data.status == 'started')
       );
+      allow delete: if isAdmin();
     }
   }
 }

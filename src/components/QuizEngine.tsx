@@ -180,32 +180,32 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
 
   if (reviewData) {
     return (
-      <div className="min-h-screen bg-[#FDFDFD] p-8 lg:p-12 overflow-y-auto">
+      <div className="min-h-screen bg-[#FDFDFD] p-4 sm:p-8 lg:p-12 overflow-y-auto">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-[40px] p-12 shadow-2xl shadow-black/5 border border-gray-100 mb-8 animate-in fade-in zoom-in duration-500">
+          <div className="bg-white rounded-[24px] sm:rounded-[40px] p-8 sm:p-12 shadow-2xl shadow-black/5 border border-gray-100 mb-8 animate-in fade-in zoom-in duration-500">
             <div className="flex flex-col items-center text-center">
-              <div className="w-32 h-32 bg-green-50 rounded-full flex items-center justify-center mb-6">
-                <CheckCircle size={64} className="text-green-500" />
+              <div className="w-20 h-20 sm:w-32 sm:h-32 bg-green-50 rounded-full flex items-center justify-center mb-6">
+                <CheckCircle size={40} className="text-green-500 sm:size-16" />
               </div>
-              <h2 className="text-4xl font-black text-[#1a1a1a] mb-2 text-[48px]">Ujian Selesai!</h2>
-              <p className="text-gray-500 mb-8 max-w-md mx-auto">Selamat! Anda telah menyelesaikan ujian. Berikut adalah ringkasan hasil Anda.</p>
+              <h2 className="text-3xl sm:text-4xl font-black text-[#1a1a1a] mb-2 text-[28px] sm:text-[48px]">Ujian Selesai!</h2>
+              <p className="text-gray-500 mb-8 max-w-md mx-auto text-sm sm:text-base">Selamat! Anda telah menyelesaikan ujian. Berikut adalah ringkasan hasil Anda.</p>
               
-              <div className="flex gap-8 mb-12">
-                <div className="bg-[#1a1a1a] text-white px-10 py-6 rounded-3xl text-center">
-                  <div className="text-xs font-black uppercase tracking-widest opacity-60 mb-1">Skor Akhir</div>
-                  <div className="text-5xl font-black">{reviewData.score}</div>
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 mb-12 w-full sm:w-auto">
+                <div className="bg-[#1a1a1a] text-white px-10 py-6 rounded-3xl text-center flex-1">
+                  <div className="text-[10px] sm:text-xs font-black uppercase tracking-widest opacity-60 mb-1">Skor Akhir</div>
+                  <div className="text-4xl sm:text-5xl font-black">{reviewData.score}</div>
                 </div>
-                <div className="bg-gray-50 px-10 py-6 rounded-3xl text-center border border-gray-100">
-                  <div className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Jawaban Benar</div>
-                  <div className="text-5xl font-black text-gray-800">
-                    {reviewData.results.filter(r => r.isCorrect).length} <span className="text-2xl text-gray-300">/ {questions.length}</span>
+                <div className="bg-gray-50 px-10 py-6 rounded-3xl text-center border border-gray-100 flex-1">
+                  <div className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Jawaban Benar</div>
+                  <div className="text-4xl sm:text-5xl font-black text-gray-800">
+                    {reviewData.results.filter(r => r.isCorrect).length} <span className="text-xl sm:text-2xl text-gray-300">/ {questions.length}</span>
                   </div>
                 </div>
               </div>
 
               <button 
                 onClick={() => onFinish(reviewData.score)}
-                className="bg-[#1a1a1a] text-white px-12 py-5 rounded-2xl font-black flex items-center gap-3 hover:bg-opacity-90 transition-all shadow-xl shadow-black/10 active:scale-95"
+                className="w-full sm:w-auto bg-[#1a1a1a] text-white px-12 py-5 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-opacity-90 transition-all shadow-xl shadow-black/10 active:scale-95"
               >
                 <Home size={24} /> KEMBALI KE BERANDA
               </button>
@@ -213,38 +213,38 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
           </div>
 
           <div className="space-y-6">
-            <h3 className="text-2xl font-black text-[#1a1a1a] mb-6 flex items-center gap-3">
+            <h3 className="text-xl sm:text-2xl font-black text-[#1a1a1a] mb-6 flex items-center gap-3">
               <RefreshCw size={24} className="text-indigo-600" /> Review Jawaban
             </h3>
             {reviewData.results.map((res, i) => (
-              <div key={res.questionId} className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm">
+              <div key={res.questionId} className="bg-white rounded-[24px] sm:rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
                 <div className="flex items-start gap-4 mb-4">
-                  <span className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center font-black text-slate-400">
+                  <span className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-50 rounded-lg sm:rounded-xl flex items-center justify-center font-black text-slate-400 text-xs shrink-0">
                     {i+1}
                   </span>
-                  <div className="flex-1">
-                    <p className="text-lg font-medium text-slate-800 mb-6">{res.text}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-base sm:text-lg font-medium text-slate-800 mb-6 leading-relaxed">{res.text}</p>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className={cn(
-                        "p-5 rounded-2xl border-2 flex flex-col gap-1",
+                        "p-4 sm:p-5 rounded-2xl border-2 flex flex-col gap-1",
                         res.isCorrect ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
                       )}>
                         <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Jawaban Anda</span>
                         <div className="flex items-center gap-2">
                           {res.isCorrect ? <CheckCircle size={16} className="text-green-600" /> : <XCircle size={16} className="text-red-600" />}
-                          <span className={cn("font-bold text-lg", res.isCorrect ? "text-green-800" : "text-red-800")}>
+                          <span className={cn("font-bold text-base sm:text-lg", res.isCorrect ? "text-green-800" : "text-red-800")}>
                             {res.userAnswer || '(Tidak dijawab)'}
                           </span>
                         </div>
                       </div>
 
                       {!res.isCorrect && (
-                        <div className="p-5 rounded-2xl border-2 border-indigo-100 bg-indigo-50 flex flex-col gap-1">
+                        <div className="p-4 sm:p-5 rounded-2xl border-2 border-indigo-100 bg-indigo-50 flex flex-col gap-1">
                           <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Kunci Jawaban</span>
                           <div className="flex items-center gap-2">
                             <CheckCircle size={16} className="text-indigo-600" />
-                            <span className="font-bold text-lg text-indigo-900">{res.correctAnswer}</span>
+                            <span className="font-bold text-base sm:text-lg text-indigo-900">{res.correctAnswer}</span>
                           </div>
                         </div>
                       )}
@@ -272,19 +272,19 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
       {/* Confirmation Modal */}
       <AnimatePresence>
         {showConfirmModal && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-[40px] w-full max-w-lg p-12 shadow-2xl"
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 100 }}
+              className="bg-white rounded-t-[32px] sm:rounded-[40px] w-full max-w-lg p-8 sm:p-12 shadow-2xl"
             >
               <div className="text-center">
-                <div className="w-24 h-24 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner">
-                  <AlertTriangle size={48} className="text-yellow-500" />
+                <div className="w-16 h-16 sm:w-24 sm:h-24 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-inner">
+                  <AlertTriangle size={32} className="text-yellow-500 sm:size-12" />
                 </div>
-                <h3 className="text-4xl font-black text-[#1a1a1a] mb-4 text-[32px] tracking-tight">Sudah Selesai?</h3>
-                <p className="text-gray-500 mb-10 text-lg leading-relaxed">
+                <h3 className="text-2xl sm:text-4xl font-black text-[#1a1a1a] mb-4 tracking-tight">Selesai?</h3>
+                <p className="text-gray-500 mb-8 sm:mb-10 text-sm sm:text-lg leading-relaxed">
                   Apakah Anda yakin ingin mengakhiri ujian sekarang? <br />
                   <span className="font-bold text-indigo-600">
                     {Object.keys(answers).length} dari {questions.length} soal
@@ -294,13 +294,13 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <button 
                     onClick={() => setShowConfirmModal(false)}
-                    className="flex-1 bg-gray-50 text-gray-600 py-5 rounded-2xl font-black hover:bg-gray-100 transition-all border-2 border-gray-100"
+                    className="flex-1 bg-gray-50 text-gray-600 py-4 sm:py-5 rounded-2xl font-black hover:bg-gray-100 transition-all border-2 border-gray-100 active:scale-95"
                   >
-                    BELUM, LANJUTKAN
+                    KEMBALI
                   </button>
                   <button 
                     onClick={submitExam}
-                    className="flex-1 bg-[#1a1a1a] text-white py-5 rounded-2xl font-black shadow-xl shadow-black/10 hover:bg-opacity-90 transition-all"
+                    className="flex-1 bg-[#1a1a1a] text-white py-4 sm:py-5 rounded-2xl font-black shadow-xl shadow-black/10 hover:bg-opacity-90 transition-all active:scale-95"
                   >
                     YAKIN, SELESAI
                   </button>
@@ -310,30 +310,29 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
           </div>
         )}
       </AnimatePresence>
-      {/* Sidebar Nav (Mobile only or Desktop Side) - Let's do TKA style: left question, right nav */}
       
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 bg-white border-r border-gray-100">
         {/* Header */}
-        <header className="h-16 border-b border-gray-100 flex items-center justify-between px-8 bg-white/80 backdrop-blur-md sticky top-0 z-10">
-          <div className="flex items-center gap-4">
-            <span className="font-bold text-lg tracking-tight uppercase">{exam?.title}</span>
-            <div className="h-4 w-px bg-gray-200"></div>
-            <span className="text-gray-500 font-mono text-sm">No. {currentIndex + 1} / {questions.length}</span>
+        <header className="h-14 sm:h-16 border-b border-gray-100 flex items-center justify-between px-4 sm:px-8 bg-white/80 backdrop-blur-md sticky top-0 z-10">
+          <div className="flex items-center gap-2 sm:gap-4 truncate mr-2">
+            <span className="font-bold text-sm sm:text-lg tracking-tight uppercase truncate">{exam?.title}</span>
+            <div className="h-4 w-px bg-gray-200 shrink-0"></div>
+            <span className="text-gray-500 font-mono text-[10px] sm:text-sm shrink-0">No. {currentIndex + 1} / {questions.length}</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 shrink-0">
             <div className={cn(
-              "flex items-center gap-2 font-mono font-bold px-4 py-1.5 rounded-full",
+              "flex items-center gap-1.5 sm:gap-2 font-mono font-bold px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm",
               timeLeft < 300 ? "bg-red-50 text-red-500 animate-pulse" : "bg-gray-100 text-gray-700"
             )}>
-              <TimerIcon size={18} />
+              <TimerIcon size={14} className="sm:size-[18px]" />
               {formatTime(timeLeft)}
             </div>
           </div>
         </header>
 
         {/* Question Panel */}
-        <div className="flex-1 overflow-y-auto p-8 lg:p-12">
+        <div className="flex-1 overflow-y-auto p-6 sm:p-8 lg:p-12">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
@@ -343,9 +342,9 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
               transition={{ duration: 0.2 }}
               className="max-w-4xl mx-auto"
             >
-              <div className="mb-8">
-                 <div className="text-xs font-bold text-[#1a1a1a]/40 uppercase tracking-widest mb-2">Pertanyaan</div>
-                 <h2 className="text-xl md:text-2xl font-medium leading-relaxed text-[#1a1a1a]">
+              <div className="mb-6 sm:mb-8">
+                 <div className="text-[10px] font-black text-[#1a1a1a]/40 uppercase tracking-widest mb-2">Pertanyaan</div>
+                 <h2 className="text-lg sm:text-2xl font-medium leading-relaxed text-[#1a1a1a]">
                   {currentQuestion.text}
                  </h2>
               </div>
@@ -360,25 +359,25 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
                       key={i}
                       onClick={() => setAnswer(currentQuestion.id, label)}
                       className={cn(
-                        "w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center gap-4 group",
+                        "w-full text-left p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-all flex items-center gap-3 sm:gap-4 group",
                         isSelected 
                           ? "bg-[#1a1a1a] border-[#1a1a1a] text-white shadow-lg" 
                           : "bg-white border-gray-100 hover:border-gray-300 text-gray-700"
                       )}
                     >
                       <span className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm border-2",
+                        "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-bold text-xs sm:text-sm border-2 shrink-0",
                         isSelected ? "bg-white/20 border-white/40" : "bg-gray-50 border-gray-200 group-hover:border-gray-400"
                       )}>
                         {label}
                       </span>
-                      <span className="font-medium">{opt}</span>
+                      <span className="font-medium text-sm sm:text-base leading-tight">{opt}</span>
                     </button>
                   );
                 })}
 
                 {currentQuestion.type === 'true_false' && (
-                  <div className="flex gap-4">
+                  <div className="flex gap-3 sm:gap-4">
                     {['Benar', 'Salah'].map(val => {
                       const isSelected = answers[currentQuestion.id] === val;
                       return (
@@ -386,7 +385,7 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
                           key={val}
                           onClick={() => setAnswer(currentQuestion.id, val)}
                           className={cn(
-                            "flex-1 p-6 rounded-2xl border-2 font-bold text-lg transition-all",
+                            "flex-1 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 font-bold text-base sm:text-lg transition-all",
                             isSelected ? "bg-[#1a1a1a] border-[#1a1a1a] text-white" : "bg-white border-gray-100 hover:border-gray-300"
                           )}
                         >
@@ -402,7 +401,7 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
                     value={answers[currentQuestion.id] || ''}
                     onChange={(e) => setAnswer(currentQuestion.id, e.target.value)}
                     placeholder="Tuliskan jawaban Anda di sini..."
-                    className="w-full min-h-[300px] p-6 rounded-2xl border-2 border-gray-100 focus:border-[#1a1a1a] focus:ring-4 focus:ring-black/5 outline-none transition-all text-lg leading-relaxed"
+                    className="w-full min-h-[200px] sm:min-h-[300px] p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-gray-100 focus:border-[#1a1a1a] focus:ring-4 focus:ring-black/5 outline-none transition-all text-base sm:text-lg leading-relaxed"
                    />
                 )}
 
@@ -412,7 +411,7 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
                     value={answers[currentQuestion.id] || ''}
                     onChange={(e) => setAnswer(currentQuestion.id, e.target.value)}
                     placeholder="Jawaban singkat..."
-                    className="w-full p-4 rounded-2xl border-2 border-gray-100 focus:border-[#1a1a1a] outline-none text-lg"
+                    className="w-full p-4 rounded-xl sm:rounded-2xl border-2 border-gray-100 focus:border-[#1a1a1a] outline-none text-base sm:text-lg"
                    />
                 )}
               </div>
@@ -421,56 +420,61 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
         </div>
 
         {/* Footer Actions */}
-        <footer className="h-20 border-t border-gray-100 px-8 flex items-center justify-between bg-white z-10">
+        <footer className="h-20 sm:h-24 border-t border-gray-100 px-4 sm:px-8 flex items-center justify-between bg-white z-10">
           <button
             disabled={currentIndex === 0}
             onClick={() => setCurrentIndex(prev => prev - 1)}
-            className="flex items-center gap-2 px-6 py-2 rounded-full hover:bg-gray-100 disabled:opacity-20 transition-all font-bold text-gray-600"
+            className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 rounded-full hover:bg-gray-100 disabled:opacity-20 transition-all font-bold text-gray-600 text-sm sm:text-base"
           >
-            <ChevronLeft size={20} /> Sebelumnya
+            <ChevronLeft size={18} className="sm:size-5" /> <span className="hidden sm:inline">Sebelumnya</span><span className="sm:hidden">Prev</span>
           </button>
 
           <button
             onClick={toggleFlag}
             className={cn(
-              "flex items-center gap-2 px-8 py-2 rounded-full transition-all font-bold border-2",
+              "flex items-center gap-1 sm:gap-2 px-3 sm:px-8 py-2 rounded-full transition-all font-bold border-2 text-[10px] sm:text-sm uppercase tracking-tight sm:tracking-normal",
               flags[currentQuestion.id] 
                 ? "bg-yellow-400 border-yellow-400 text-black shadow-inner" 
                 : "bg-white border-gray-100 text-gray-400 hover:border-gray-200"
             )}
           >
-            <Flag size={20} fill={flags[currentQuestion.id] ? "black" : "none"} /> 
-            {flags[currentQuestion.id] ? "Ragu-ragu" : "Tandai Ragu"}
+            <Flag size={14} className="sm:size-5" fill={flags[currentQuestion.id] ? "black" : "none"} /> 
+            {flags[currentQuestion.id] ? "Ragu" : "Ragu-ragu"}
           </button>
 
           {currentIndex === questions.length - 1 ? (
              <button
               onClick={() => setShowConfirmModal(true)}
-              className="bg-green-500 text-white px-8 py-2 rounded-full flex items-center gap-2 hover:bg-green-600 transition-all font-bold shadow-lg shadow-green-500/20"
+              className="bg-green-600 text-white px-4 sm:px-8 py-2 rounded-full flex items-center gap-1 sm:gap-2 hover:bg-green-700 transition-all font-bold shadow-lg shadow-green-600/20 text-sm sm:text-base"
              >
-               <CheckCircle size={20} /> Selesai Ujian
+               <CheckCircle size={18} className="sm:size-5" /> Selesai
              </button>
           ) : (
             <button
               onClick={() => setCurrentIndex(prev => prev + 1)}
-              className="bg-[#1a1a1a] text-white px-8 py-2 rounded-full flex items-center gap-2 hover:bg-opacity-90 transition-all font-bold shadow-lg shadow-black/20"
+              className="bg-[#1a1a1a] text-white px-4 sm:px-8 py-2 rounded-full flex items-center gap-1 sm:gap-2 hover:bg-opacity-90 transition-all font-bold shadow-lg shadow-black/20 text-sm sm:text-base"
             >
-               Berikutnya <ChevronRight size={20} />
+               <span className="hidden sm:inline">Berikutnya</span><span className="sm:hidden">Next</span> <ChevronRight size={18} className="sm:size-5" />
             </button>
           )}
         </footer>
       </main>
 
-      {/* Navigation Grid (Sidebar Right) */}
-      <aside className="w-full lg:w-80 bg-gray-50 border-l border-gray-100 flex flex-col">
-         <div className="p-6 border-b border-gray-200">
-            <h3 className="font-bold text-gray-700 flex items-center gap-2">
-              <ChevronRight size={18} /> Navigasi Soal
-            </h3>
-            <p className="text-xs text-gray-400 mt-1">Klik nomor untuk berpindah soal</p>
+      {/* Navigation Grid (Sidebar) */}
+      <aside className="h-[250px] lg:h-full w-full lg:w-80 bg-gray-50 border-t lg:border-t-0 lg:border-l border-gray-100 flex flex-col shrink-0">
+         <div className="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center lg:block">
+            <div>
+              <h3 className="font-bold text-gray-700 flex items-center gap-2 text-sm sm:text-base">
+                <ChevronRight size={18} /> Navigasi Soal
+              </h3>
+              <p className="text-[10px] text-gray-400 mt-0.5 sm:mt-1">Klik nomor untuk berpindah soal</p>
+            </div>
+            <div className="lg:hidden">
+               <span className="text-[10px] font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">{Object.keys(answers).length}/{questions.length} Selesai</span>
+            </div>
          </div>
-         <div className="flex-1 overflow-y-auto p-6">
-            <div className="grid grid-cols-5 md:grid-cols-4 lg:grid-cols-4 gap-3">
+         <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+            <div className="grid grid-cols-6 sm:grid-cols-10 lg:grid-cols-4 gap-2 sm:gap-3">
               {questions.map((q, i) => {
                 const isAnswered = !!answers[q.id];
                 const isFlagged = flags[q.id];
@@ -481,39 +485,33 @@ export default function QuizEngine({ examId, onFinish }: QuizEngineProps) {
                     key={q.id}
                     onClick={() => setCurrentIndex(i)}
                     className={cn(
-                      "aspect-square rounded-xl flex items-center justify-center text-sm font-bold transition-all relative overflow-hidden boarder-2",
-                      isActive ? "ring-4 ring-black/5 scale-110 z-10 border-[#1a1a1a]" : "border-transparent",
+                      "aspect-square rounded-lg sm:rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold transition-all relative overflow-hidden border-2",
+                      isActive ? "ring-4 ring-black/5 scale-105 z-10 border-[#1a1a1a]" : "border-transparent",
                       isFlagged 
                         ? "bg-yellow-400 text-black" 
                         : isAnswered 
-                          ? "bg-green-500 text-white" 
+                          ? "bg-green-600 text-white" 
                           : "bg-white text-gray-400 hover:bg-gray-200"
                     )}
                   >
                     {i + 1}
-                    {isActive && (
-                      <motion.div 
-                        layoutId="active-indicator"
-                        className="absolute inset-0 border-2 border-[#1a1a1a] rounded-xl pointer-events-none"
-                      />
-                    )}
                   </button>
                 );
               })}
             </div>
          </div>
-         <div className="p-6 bg-white border-t border-gray-100 flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-xs">
-              <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
-              <span className="text-gray-500">Sudah dijawab</span>
+         <div className="p-4 sm:p-6 bg-white border-t border-gray-100 hidden sm:flex flex-col gap-2">
+            <div className="flex items-center gap-2 text-[10px]">
+              <div className="w-2.5 h-2.5 bg-green-600 rounded-sm"></div>
+              <span className="text-gray-500 uppercase font-bold tracking-tight">Dijawab</span>
             </div>
-            <div className="flex items-center gap-2 text-xs">
-              <div className="w-3 h-3 bg-yellow-400 rounded-sm"></div>
-              <span className="text-gray-500">Ragu-ragu</span>
+            <div className="flex items-center gap-2 text-[10px]">
+              <div className="w-2.5 h-2.5 bg-yellow-400 rounded-sm"></div>
+              <span className="text-gray-500 uppercase font-bold tracking-tight">Ragu-ragu</span>
             </div>
-            <div className="flex items-center gap-2 text-xs">
-              <div className="w-3 h-3 bg-white border-gray-200 border rounded-sm"></div>
-              <span className="text-gray-500">Belum dijawab</span>
+            <div className="flex items-center gap-2 text-[10px]">
+              <div className="w-2.5 h-2.5 bg-white border-gray-200 border rounded-sm"></div>
+              <span className="text-gray-500 uppercase font-bold tracking-tight">Belum</span>
             </div>
          </div>
       </aside>
