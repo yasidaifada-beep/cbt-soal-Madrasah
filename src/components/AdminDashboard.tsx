@@ -16,7 +16,7 @@ export default function AdminDashboard() {
   const [userMap, setUserMap] = useState<Record<string, UserProfile>>({});
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [isCreatingExam, setIsCreatingExam] = useState(false);
-  const [activeTab, setActiveTab] = useState<'questions' | 'results'>('questions');
+  const [activeTab, setActiveTab] = useState<'questions' | 'results' | 'users'>('questions');
   const [examForm, setExamForm] = useState({ title: '', duration: 60 });
   const [isEditingExam, setIsEditingExam] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
@@ -261,6 +261,52 @@ export default function AdminDashboard() {
   const startEditExam = (exam: Exam) => {
     setExamForm({ title: exam.title, duration: exam.durationMinutes });
     setIsEditingExam(true);
+  };
+
+  const toggleUserRole = async (userId: string, currentRole: string) => {
+    const user = userMap[userId];
+    if (user?.email === 'yasidaifada@gmail.com') {
+      alert("Role admin utama tidak dapat diubah.");
+      return;
+    }
+    const newRole = currentRole === 'admin' ? 'student' : 'admin';
+    if (!confirm(`Ubah peran user ini menjadi ${newRole.toUpperCase()}?`)) return;
+    try {
+      await updateDoc(doc(db, 'users', userId), { role: newRole });
+      fetchUsers();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `users/${userId}`);
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    const user = userMap[userId];
+    if (user?.email === 'yasidaifada@gmail.com') {
+      alert("Admin utama tidak dapat dihapus.");
+      return;
+    }
+    if (!confirm("Hapus pengguna ini selamanya? Akses login mereka akan dicabut dari database (namun akun Google tetap ada).")) return;
+    try {
+      await deleteDoc(doc(db, 'users', userId));
+      await fetchUsers();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `users/${userId}`);
+    }
+  };
+
+  const deleteSubmission = async (submissionId: string) => {
+    if (!confirm("Hapus hasil pengerjaan ini? Data akan hilang permanen.")) return;
+    try {
+      setLoading(true);
+      await deleteDoc(doc(db, 'submissions', submissionId));
+      if (selectedExamId) {
+        fetchSubmissions(selectedExamId);
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `submissions/${submissionId}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -513,6 +559,16 @@ export default function AdminDashboard() {
                     Hasil & Analisis
                     {activeTab === 'results' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 rounded-full" />}
                   </button>
+                  <button 
+                    onClick={() => setActiveTab('users')}
+                    className={cn(
+                      "pb-4 font-black text-sm uppercase tracking-widest transition-all relative",
+                      activeTab === 'users' ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
+                    )}
+                  >
+                    Pengguna
+                    {activeTab === 'users' && <motion.div layoutId="tab" className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-600 rounded-full" />}
+                  </button>
                 </div>
 
                 {/* Tab Content */}
@@ -684,7 +740,7 @@ export default function AdminDashboard() {
                       </div>
                     )}
                   </div>
-                ) : (
+                ) : activeTab === 'results' ? (
                   /* Results Tab Content */
                   <div className="flex-1">
                     <div className="flex justify-between items-center mb-6">
@@ -718,16 +774,71 @@ export default function AdminDashboard() {
                                 (sub.score || 0) > 70 ? "text-green-600" : "text-slate-800"
                               )}>{sub.score || 0}</span>
                             </div>
-                            <button 
-                              onClick={() => setSelectedSubmission(sub)}
-                              className="bg-white border border-slate-200 text-slate-600 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-50 transition-colors"
-                            >Review</button>
+                            <div className="flex items-center gap-2">
+                              <button 
+                                onClick={() => setSelectedSubmission(sub)}
+                                className="bg-white border border-slate-200 text-slate-600 px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-50 transition-colors"
+                              >Review</button>
+                              <button 
+                                onClick={() => deleteSubmission(sub.id)}
+                                className="p-2.5 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all border border-transparent hover:border-rose-100"
+                                title="Hapus Hasil"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
                       {submissions.length === 0 && (
                         <div className="text-center py-20 text-slate-300 font-medium">Belum ada siswa yang mengerjakan.</div>
                       )}
+                    </div>
+                  </div>
+                ) : (
+                  /* Users Tab Content */
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Daftar Pengguna Terdaftar ({Object.keys(userMap).length})</h3>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4">
+                      {Object.values(userMap).map(usr => (
+                        <div key={usr.uid} className="bg-slate-50 border border-slate-100 rounded-2xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                          <div className="flex items-center gap-4">
+                             <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center font-black", usr.role === 'admin' ? "bg-indigo-600 text-white" : "bg-slate-200 text-slate-500")}>
+                               {usr.name?.[0] || 'U'}
+                             </div>
+                             <div>
+                               <p className="font-black text-slate-800">{usr.name}</p>
+                               <p className="text-xs text-slate-400 font-bold">{usr.email}</p>
+                             </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                             <div className={cn("px-4 py-1.5 rounded-full text-[10px] font-black uppercase border", usr.role === 'admin' ? "bg-indigo-50 text-indigo-600 border-indigo-100" : "bg-slate-100 text-slate-400 border-slate-200")}>
+                               {usr.role}
+                             </div>
+                             <button 
+                               onClick={() => toggleUserRole(usr.uid, usr.role)}
+                               className={cn(
+                                 "text-xs font-black hover:underline",
+                                 usr.email === 'yasidaifada@gmail.com' ? "text-slate-300 cursor-not-allowed" : "text-indigo-600"
+                               )}
+                               disabled={usr.email === 'yasidaifada@gmail.com'}
+                             >
+                               Ubah Role
+                             </button>
+                             {usr.email !== 'yasidaifada@gmail.com' && (
+                               <button 
+                                 onClick={() => deleteUser(usr.uid)}
+                                 className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                                 title="Hapus Pengguna"
+                               >
+                                 <Trash2 size={16} />
+                               </button>
+                             )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
