@@ -3,9 +3,11 @@ import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, serverTimestamp
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Exam, Question, QuestionType, Submission, UserProfile } from '../types';
 import * as XLSX from 'xlsx';
-import { Upload, Plus, Trash2, Edit3, ChevronRight, FileSpreadsheet, X, CheckSquare, AlignLeft, ListOrdered, ToggleLeft, ShieldCheck, Download, Users, BarChart3, Clock, Calendar, Search } from 'lucide-react';
+import { Upload, Plus, Trash2, Edit3, ChevronRight, FileSpreadsheet, X, CheckSquare, AlignLeft, ListOrdered, ToggleLeft, ShieldCheck, Download, Users, BarChart3, Clock, Calendar, Search, Image as ImageIcon, Table as TableIcon } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export default function AdminDashboard() {
   const [exams, setExams] = useState<Exam[]>([]);
@@ -556,7 +558,11 @@ export default function AdminDashboard() {
                           <div className="flex gap-3 sm:gap-4">
                             <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center font-black text-slate-400 text-[10px] shrink-0">{i+1}</span>
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-slate-800 mb-4 sm:mb-6 text-sm sm:text-lg leading-relaxed">{q.text}</p>
+                              <div className="font-medium text-slate-800 mb-4 sm:mb-6 text-sm sm:text-lg leading-relaxed prose prose-slate max-w-none">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                  {q.text}
+                                </ReactMarkdown>
+                              </div>
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                 <div className={cn(
                                   "p-4 sm:p-5 rounded-xl sm:rounded-2xl border-2 flex flex-col gap-1",
@@ -753,12 +759,33 @@ export default function AdminDashboard() {
                                     /* Inline Edit Form */
                                     <div className="space-y-4">
                                       <div>
-                                        <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block">Teks Pertanyaan</label>
+                                        <div className="flex justify-between items-center mb-2">
+                                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Teks Pertanyaan</label>
+                                          <div className="flex gap-2">
+                                            <button 
+                                              type="button"
+                                              onClick={() => setEditQuestionForm({...editQuestionForm, text: editQuestionForm.text + "\n![Deskripsi Gambar](URL_GAMBAR_DISINI)\n"})}
+                                              className="p-1 px-2 border border-slate-200 rounded hover:bg-slate-50 transition-colors flex items-center gap-1 text-[10px] font-bold text-slate-500"
+                                              title="Insert Gambar"
+                                            >
+                                              <ImageIcon size={12} /> Gambar
+                                            </button>
+                                            <button 
+                                              type="button"
+                                              onClick={() => setEditQuestionForm({...editQuestionForm, text: editQuestionForm.text + "\n\n| Judul 1 | Judul 2 |\n|---------|---------|\n| Baris 1 | Isi 1 |\n| Baris 2 | Isi 2 |\n\n"})}
+                                              className="p-1 px-2 border border-slate-200 rounded hover:bg-slate-50 transition-colors flex items-center gap-1 text-[10px] font-bold text-slate-500"
+                                              title="Insert Tabel"
+                                            >
+                                              <TableIcon size={12} /> Tabel
+                                            </button>
+                                          </div>
+                                        </div>
                                         <textarea 
                                           value={editQuestionForm.text}
                                           onChange={(e) => setEditQuestionForm({...editQuestionForm, text: e.target.value})}
                                           className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 focus:border-indigo-600 outline-none font-medium text-sm"
                                           rows={3}
+                                          placeholder="Tulis soal disini... (Mendukung format Markdown)"
                                         />
                                       </div>
                                       
@@ -843,7 +870,11 @@ export default function AdminDashboard() {
                                     </div>
                                   ) : (
                                     <>
-                                      <p className="text-slate-800 font-medium leading-relaxed mb-4 text-sm sm:text-base">{q.text}</p>
+                                      <div className="text-slate-800 font-medium leading-relaxed mb-4 text-sm sm:text-base prose prose-slate max-w-none">
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                          {q.text}
+                                        </ReactMarkdown>
+                                      </div>
                                       <div className="flex flex-wrap gap-2">
                                         <span className={cn(
                                           "text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full border uppercase",
@@ -990,11 +1021,31 @@ export default function AdminDashboard() {
                           </div>
 
                           <div>
-                            <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Teks Pertanyaan</label>
+                            <div className="flex justify-between items-center mb-2">
+                              <label className="text-xs font-black text-slate-400 uppercase tracking-widest block">Teks Pertanyaan</label>
+                              <div className="flex gap-2">
+                                <button 
+                                  type="button"
+                                  onClick={() => setNewQuestion({...newQuestion, text: newQuestion.text + "\n![Deskripsi Gambar](URL_GAMBAR_DISINI)\n"})}
+                                  className="p-1 px-2 border border-slate-200 rounded hover:bg-slate-50 transition-colors flex items-center gap-1 text-[10px] font-bold text-slate-500"
+                                  title="Insert Gambar"
+                                >
+                                  <ImageIcon size={12} /> Gambar
+                                </button>
+                                <button 
+                                  type="button"
+                                  onClick={() => setNewQuestion({...newQuestion, text: newQuestion.text + "\n\n| Judul 1 | Judul 2 |\n|---------|---------|\n| Baris 1 | Isi 1 |\n| Baris 2 | Isi 2 |\n\n"})}
+                                  className="p-1 px-2 border border-slate-200 rounded hover:bg-slate-50 transition-colors flex items-center gap-1 text-[10px] font-bold text-slate-500"
+                                  title="Insert Tabel"
+                                >
+                                  <TableIcon size={12} /> Tabel
+                                </button>
+                              </div>
+                            </div>
                             <textarea 
                               value={newQuestion.text}
                               onChange={(e) => setNewQuestion({...newQuestion, text: e.target.value})}
-                              placeholder="Masukkan pertanyaan di sini..."
+                              placeholder="Masukkan pertanyaan di sini... (Mendukung format Markdown)"
                               className="w-full bg-white border border-slate-200 rounded-2xl px-6 py-4 min-h-[120px] focus:border-indigo-600 outline-none"
                             />
                           </div>

@@ -5,6 +5,8 @@ import { Exam, Question, Submission } from '../types';
 import { cn } from '../lib/utils';
 import { ChevronLeft, ChevronRight, Timer as TimerIcon, CheckCircle, Flag, XCircle, AlertTriangle, RefreshCw, Home, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface QuizEngineProps {
   examId: string;
@@ -236,7 +238,11 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
                     {i+1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-base sm:text-lg font-medium text-slate-800 mb-6 leading-relaxed">{res.text}</p>
+                    <div className="text-base sm:text-lg font-medium text-slate-800 mb-6 leading-relaxed prose prose-slate max-w-none">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {res.text}
+                      </ReactMarkdown>
+                    </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className={cn(
@@ -281,7 +287,7 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
   const currentQuestion = questions[currentIndex];
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-[#FDFDFD] overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-0.5cm)] bg-[#FDFDFD] overflow-hidden">
       {/* Confirmation Modal */}
       <AnimatePresence>
         {showConfirmModal && (
@@ -357,9 +363,11 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
             >
               <div className="mb-6 sm:mb-8">
                  <div className="text-[10px] font-black text-[#1a1a1a]/40 uppercase tracking-widest mb-2">Pertanyaan</div>
-                 <h2 className="text-lg sm:text-2xl font-medium leading-relaxed text-[#1a1a1a]">
-                  {currentQuestion.text}
-                 </h2>
+                 <div className="text-lg sm:text-2xl font-medium leading-relaxed text-[#1a1a1a] prose prose-slate max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {currentQuestion.text}
+                  </ReactMarkdown>
+                 </div>
               </div>
 
               {/* Interaction Logic for different types */}
