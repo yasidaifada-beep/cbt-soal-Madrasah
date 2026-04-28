@@ -105,23 +105,23 @@ export default function App() {
   );
 
   if (!user) return (
-    <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center p-6">
-      <div className="max-w-md w-full bg-white rounded-[40px] p-12 shadow-2xl shadow-black/5 border border-gray-100 flex flex-col items-center text-center">
-        <div className="w-20 h-20 bg-[#1a1a1a] rounded-[24px] flex items-center justify-center mb-8 shadow-xl shadow-black/20">
-          <GraduationCap size={40} className="text-white" />
+    <div className="min-h-screen bg-[#FDFDFD] flex items-center justify-center p-4 sm:p-6">
+      <div className="max-w-md w-full bg-white rounded-[32px] sm:rounded-[40px] p-8 sm:p-12 shadow-2xl shadow-black/5 border border-gray-100 flex flex-col items-center text-center">
+        <div className="w-16 h-16 sm:w-20 h-20 bg-[#1a1a1a] rounded-[20px] sm:rounded-[24px] flex items-center justify-center mb-6 sm:mb-8 shadow-xl shadow-black/20">
+          <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
         </div>
-        <h1 className="text-4xl font-extrabold text-[#1a1a1a] tracking-tight mb-2">CBT Pintar</h1>
-        <p className="text-[#9e9e9e] mb-12 leading-relaxed">Sistem Ujian Berbasis Komputer Modern.<br/>Cepat, Aman, dan Efisien.</p>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-[#1a1a1a] tracking-tight mb-2">CBT Pintar</h1>
+        <p className="text-[#9e9e9e] mb-8 sm:mb-12 leading-relaxed text-sm sm:text-base">Sistem Ujian Berbasis Komputer Modern.<br className="hidden sm:block"/> Cepat, Aman, dan Efisien.</p>
         
         <div className="w-full">
           <button 
             onClick={login}
-            className="w-full bg-[#1a1a1a] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-opacity-90 transition-all shadow-lg shadow-black/10 active:scale-95"
+            className="w-full bg-[#1a1a1a] text-white py-4 rounded-xl sm:rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-opacity-90 transition-all shadow-lg shadow-black/10 active:scale-95"
           >
             <LogIn size={20} /> Masuk dengan Google
           </button>
         </div>
-        <p className="mt-8 text-xs text-slate-400">Gunakan akun Google Anda untuk mulai mengerjakan ujian.</p>
+        <p className="mt-8 text-[10px] sm:text-xs text-slate-400">Gunakan akun Google Anda untuk mulai mengerjakan ujian.</p>
       </div>
     </div>
   );
@@ -132,37 +132,37 @@ export default function App() {
 
   if (activeView === 'admin' && profile?.role === 'admin') {
     return (
-      <>
-        <div className="bg-[#1a1a1a] p-2 flex justify-end px-8">
-           <button onClick={() => setActiveView('home')} className="text-xs text-white/60 hover:text-white font-bold flex items-center gap-1">
+      <div className="min-h-screen bg-white">
+        <div className="bg-[#1a1a1a] p-3 flex justify-end px-4 sm:px-8">
+           <button onClick={() => setActiveView('home')} className="text-[10px] sm:text-xs text-white/60 hover:text-white font-bold flex items-center gap-1">
              <ChevronRight className="rotate-180" size={14}/> KEMBALI KE HOME
            </button>
         </div>
         <AdminDashboard />
-      </>
+      </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] font-sans">
-      <nav className="h-20 bg-white border-b border-gray-100 px-8 flex items-center justify-between sticky top-0 z-20">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-[#1a1a1a] rounded-xl flex items-center justify-center">
-             <GraduationCap size={20} className="text-white" />
+      <nav className="h-16 sm:h-20 bg-white border-b border-gray-100 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-20">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[#1a1a1a] rounded-lg sm:rounded-xl flex items-center justify-center shrink-0">
+             <GraduationCap size={18} className="text-white sm:size-5" />
           </div>
-          <div>
-            <h1 className="font-extrabold text-xl tracking-tight text-[#1a1a1a]">CBT Pintar</h1>
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{profile?.role}</p>
+          <div className="truncate">
+            <h1 className="font-extrabold text-base sm:text-xl tracking-tight text-[#1a1a1a] truncate">CBT Pintar</h1>
+            <p className="text-[9px] sm:text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-none">{profile?.role}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {profile?.role === 'admin' && (
             <button 
               onClick={() => setActiveView('admin')}
-              className="bg-gray-100 text-gray-700 px-6 py-2 rounded-full font-bold flex items-center gap-2 hover:bg-gray-200"
+              className="bg-gray-100 text-gray-700 px-3 sm:px-6 py-1.5 sm:py-2 rounded-full font-bold text-[11px] sm:text-sm flex items-center gap-2 hover:bg-gray-200"
             >
-              <ShieldCheck size={18} /> Panel Admin
+              <ShieldCheck size={14} className="sm:size-5" /> <span className="hidden sm:inline">Panel Admin</span><span className="sm:hidden">Admin</span>
             </button>
           )}
           <button 
@@ -170,60 +170,60 @@ export default function App() {
             className="text-gray-400 hover:text-red-500 p-2 transition-colors"
             title="Keluar"
           >
-            <LogOut size={24} />
+            <LogOut size={20} className="sm:size-6" />
           </button>
         </div>
       </nav>
 
-      <main className="max-w-5xl mx-auto p-8 lg:p-12">
-        <div className="mb-12 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+      <main className="max-w-5xl mx-auto p-4 sm:p-8 lg:p-12">
+        <div className="mb-8 sm:mb-12 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
           <div>
-            <h2 className="text-3xl font-extrabold text-[#1a1a1a] tracking-tight">Selamat Datang, {profile?.name}!</h2>
-            <p className="text-gray-500 mt-2">Pilih ujian yang tersedia untuk memulai.</p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#1a1a1a] tracking-tight">Halo, {profile?.name.split(' ')[0]}!</h2>
+            <p className="text-gray-500 mt-1 text-sm sm:text-base">Pilih ujian yang tersedia untuk memulai.</p>
           </div>
           {profile?.role === 'admin' && (
             <button 
               onClick={() => setActiveView('admin')}
-              className="bg-[#1a1a1a] text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-2 shadow-xl shadow-black/10 hover:bg-opacity-90 transition-all active:scale-95"
+              className="bg-[#1a1a1a] text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold flex items-center justify-center gap-2 shadow-xl shadow-black/10 hover:bg-opacity-90 transition-all active:scale-95 text-sm sm:text-base w-full md:w-auto"
             >
-              <Plus size={20} /> Buat Ujian Baru
+              <Plus size={18} /> Buat Ujian Baru
             </button>
           )}
         </div>
 
         {finishedScore !== null && (
-          <div className="bg-green-500 text-white p-8 rounded-[32px] mb-12 shadow-xl shadow-green-500/20 flex flex-col items-center">
-            <Calculator size={48} className="mb-4" />
-            <span className="text-lg font-bold opacity-80">UJIAN SELESAI</span>
-            <h3 className="text-6xl font-black mt-2">{finishedScore.toFixed(0)}</h3>
-            <p className="mt-4 font-medium opacity-90">Skor Anda telah berhasil disimpan.</p>
+          <div className="bg-green-600 text-white p-6 sm:p-8 rounded-[24px] sm:rounded-[32px] mb-8 sm:mb-12 shadow-xl shadow-green-600/20 flex flex-col items-center">
+            <Calculator className="mb-4 size-8 sm:size-12" />
+            <span className="text-xs sm:text-lg font-bold opacity-80 uppercase tracking-widest">UJIAN SELESAI</span>
+            <h3 className="text-5xl sm:text-6xl font-black mt-2">{finishedScore.toFixed(0)}</h3>
+            <p className="mt-4 text-xs sm:text-base font-medium opacity-90">Skor Anda telah berhasil disimpan.</p>
             <button 
               onClick={() => setFinishedScore(null)}
-              className="mt-6 bg-white/20 hover:bg-white/30 text-white px-8 py-2 rounded-full font-bold transition-all"
+              className="mt-6 bg-white/20 hover:bg-white/30 text-white px-8 py-2 rounded-full font-bold transition-all text-sm"
             >
               Tutup
             </button>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
           {exams.map(exam => (
             <div 
               key={exam.id}
-              className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-xl hover:shadow-black/5 transition-all group"
+              className="bg-white rounded-[24px] sm:rounded-[32px] p-6 sm:p-8 shadow-sm border border-gray-100 flex flex-col justify-between hover:shadow-xl hover:shadow-black/5 transition-all group"
             >
               <div>
-                <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center mb-6 text-gray-400 group-hover:bg-[#1a1a1a] group-hover:text-white transition-all">
-                  <FileText size={24} />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-50 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 text-gray-400 group-hover:bg-[#1a1a1a] group-hover:text-white transition-all">
+                  <FileText size={20} className="sm:size-6" />
                 </div>
-                <h3 className="text-xl font-bold text-[#1a1a1a] mb-2 leading-tight">{exam.title}</h3>
-                <p className="text-gray-400 text-sm mb-6 leading-relaxed line-clamp-2">Durasi Pengerjaan: {exam.durationMinutes} Menit</p>
+                <h3 className="text-lg sm:text-xl font-bold text-[#1a1a1a] mb-2 leading-tight">{exam.title}</h3>
+                <p className="text-gray-400 text-[11px] sm:text-sm mb-6 leading-relaxed">Durasi: {exam.durationMinutes} Menit</p>
               </div>
               <button 
                 onClick={() => startExam(exam.id)}
-                className="w-full bg-[#1a1a1a] text-white py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all active:scale-95"
+                className="w-full bg-[#1a1a1a] text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all active:scale-95 text-sm sm:text-base"
               >
-                Mulai Ujian <ChevronRight size={18} />
+                Mulai Ujian <ChevronRight size={16} />
               </button>
             </div>
           ))}
