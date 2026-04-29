@@ -562,13 +562,23 @@ export default function AdminDashboard() {
                                 <ReactMarkdown 
                                   remarkPlugins={[remarkGfm]}
                                   components={{
-                                    img: ({node, ...props}) => (
-                                      <img 
-                                        {...props} 
-                                        className="rounded-lg border border-slate-200 block my-2 max-h-[200px] w-auto mx-auto" 
-                                        referrerPolicy="no-referrer" 
-                                      />
-                                    )
+                                    img: ({node, ...props}) => {
+                                      let src = props.src || '';
+                                      if (src.includes('drive.google.com')) {
+                                        const match = src.match(/[?&]id=([^&]+)/) || src.match(/\/d\/([^/]+)/);
+                                        if (match && match[1]) {
+                                          src = `https://lh3.googleusercontent.com/d/${match[1]}`;
+                                        }
+                                      }
+                                      return (
+                                        <img 
+                                          {...props} 
+                                          src={src}
+                                          className="rounded-lg border border-slate-200 block my-2 max-h-[200px] w-auto mx-auto" 
+                                          referrerPolicy="no-referrer" 
+                                        />
+                                      );
+                                    }
                                   }}
                                 >
                                   {q.text}
@@ -885,13 +895,23 @@ export default function AdminDashboard() {
                                         <ReactMarkdown 
                                           remarkPlugins={[remarkGfm]}
                                           components={{
-                                            img: ({node, ...props}) => (
-                                              <img 
-                                                {...props} 
-                                                className="rounded-md border border-slate-200 block my-1 max-h-[150px] w-auto" 
-                                                referrerPolicy="no-referrer" 
-                                              />
-                                            )
+                                            img: ({node, ...props}) => {
+                                              let src = props.src || '';
+                                              if (src.includes('drive.google.com')) {
+                                                const match = src.match(/[?&]id=([^&]+)/) || src.match(/\/d\/([^/]+)/);
+                                                if (match && match[1]) {
+                                                  src = `https://lh3.googleusercontent.com/d/${match[1]}`;
+                                                }
+                                              }
+                                              return (
+                                                <img 
+                                                  {...props} 
+                                                  src={src}
+                                                  className="rounded-md border border-slate-200 block my-1 max-h-[150px] w-auto" 
+                                                  referrerPolicy="no-referrer" 
+                                                />
+                                              );
+                                            }
                                           }}
                                         >
                                           {q.text}

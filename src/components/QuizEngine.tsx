@@ -367,13 +367,24 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
                   <ReactMarkdown 
                     remarkPlugins={[remarkGfm]}
                     components={{
-                      img: ({node, ...props}) => (
-                        <img 
-                          {...props} 
-                          className="rounded-xl border border-slate-200 block my-4 max-h-[400px] w-auto mx-auto shadow-md" 
-                          referrerPolicy="no-referrer" 
-                        />
-                      )
+                      img: ({node, ...props}) => {
+                        // Transform Google Drive URLs for better compatibility
+                        let src = props.src || '';
+                        if (src.includes('drive.google.com')) {
+                          const match = src.match(/[?&]id=([^&]+)/) || src.match(/\/d\/([^/]+)/);
+                          if (match && match[1]) {
+                            src = `https://lh3.googleusercontent.com/d/${match[1]}`;
+                          }
+                        }
+                        return (
+                          <img 
+                            {...props} 
+                            src={src}
+                            className="rounded-xl border border-slate-200 block my-4 max-h-[400px] w-auto mx-auto shadow-md" 
+                            referrerPolicy="no-referrer" 
+                          />
+                        );
+                      }
                     }}
                   >
                     {currentQuestion.text}
