@@ -19,7 +19,7 @@ export default function AdminDashboard() {
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [isCreatingExam, setIsCreatingExam] = useState(false);
   const [activeTab, setActiveTab] = useState<'questions' | 'results' | 'users'>('questions');
-  const [examForm, setExamForm] = useState({ title: '', duration: 60, allowMultipleAttempts: false });
+  const [examForm, setExamForm] = useState({ title: '', duration: 60 });
   const [isEditingExam, setIsEditingExam] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
   const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
@@ -108,14 +108,13 @@ export default function AdminDashboard() {
         title: examForm.title,
         description: "",
         durationMinutes: examForm.duration,
-        allowMultipleAttempts: examForm.allowMultipleAttempts,
         status: 'draft',
         createdAt: serverTimestamp()
       });
       await fetchExams();
       setSelectedExamId(docRef.id);
       setIsCreatingExam(false);
-      setExamForm({ title: '', duration: 60, allowMultipleAttempts: false });
+      setExamForm({ title: '', duration: 60 });
       setIsAddingQuestion(true); // Automatically open the question sheet
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'exams');
@@ -389,8 +388,7 @@ export default function AdminDashboard() {
       setLoading(true);
       await updateDoc(doc(db, 'exams', selectedExamId), {
         title: examForm.title,
-        durationMinutes: examForm.duration,
-        allowMultipleAttempts: examForm.allowMultipleAttempts
+        durationMinutes: examForm.duration
       });
       await fetchExams();
       setIsEditingExam(false);
@@ -402,11 +400,7 @@ export default function AdminDashboard() {
   };
 
   const startEditExam = (exam: Exam) => {
-    setExamForm({ 
-      title: exam.title, 
-      duration: exam.durationMinutes, 
-      allowMultipleAttempts: exam.allowMultipleAttempts || false 
-    });
+    setExamForm({ title: exam.title, duration: exam.durationMinutes });
     setIsEditingExam(true);
   };
 
@@ -478,19 +472,6 @@ export default function AdminDashboard() {
                     onChange={(e) => setExamForm({...examForm, duration: parseInt(e.target.value) || 60})}
                     className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 focus:border-indigo-600 outline-none font-bold text-sm sm:text-base"
                   />
-                </div>
-                
-                <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <input 
-                    type="checkbox"
-                    id="allowMultiple"
-                    checked={examForm.allowMultipleAttempts}
-                    onChange={(e) => setExamForm({...examForm, allowMultipleAttempts: e.target.checked})}
-                    className="w-5 h-5 accent-indigo-600"
-                  />
-                  <label htmlFor="allowMultiple" className="text-sm font-bold text-slate-700 cursor-pointer">
-                    Izinkan siswa mengerjakan lebih dari satu kali
-                  </label>
                 </div>
                 <button 
                   onClick={isCreatingExam ? createExam : updateExamDetails}
@@ -649,11 +630,6 @@ export default function AdminDashboard() {
                     <span className={cn("text-[9px] uppercase font-black px-2 py-0.5 rounded", selectedExamId === exam.id ? "bg-white/20" : "bg-slate-200 text-slate-500")}>
                       {exam.status === 'active' ? 'AKTIF' : exam.status === 'closed' ? 'DITUTUP' : 'DRAF'}
                     </span>
-                    {exam.allowMultipleAttempts && (
-                      <span className={cn("text-[9px] uppercase font-black px-2 py-0.5 rounded", selectedExamId === exam.id ? "bg-white/20" : "bg-indigo-100 text-indigo-600")}>
-                        🔄 MULTI
-                      </span>
-                    )}
                     <span className="text-[10px] sm:text-[9px] opacity-60 font-bold">{exam.durationMinutes}m</span>
                   </div>
                   
@@ -697,14 +673,9 @@ export default function AdminDashboard() {
                           <Edit3 size={18} />
                         </button>
                       </div>
-                      <div className="flex gap-2 mt-4 items-center">
+                      <div className="flex gap-2 mt-4">
                          <button onClick={() => updateStatus(exams.find(e => e.id === selectedExamId)!, 'active')} className="text-[9px] sm:text-[10px] bg-green-50 text-green-600 px-3 sm:px-4 py-1.5 rounded-full font-black border border-green-100 hover:bg-green-100 transition-colors uppercase">BUKA</button>
                          <button onClick={() => updateStatus(exams.find(e => e.id === selectedExamId)!, 'closed')} className="text-[9px] sm:text-[10px] bg-red-50 text-red-600 px-3 sm:px-4 py-1.5 rounded-full font-black border border-red-100 hover:bg-red-100 transition-colors uppercase">KUNCI</button>
-                         {exams.find(e => e.id === selectedExamId)?.allowMultipleAttempts && (
-                           <span className="text-[9px] sm:text-[10px] bg-indigo-50 text-indigo-600 px-3 sm:px-4 py-1.5 rounded-full font-black border border-indigo-100 flex items-center gap-1 uppercase">
-                             <RefreshCw size={10} /> Multiple Attempts
-                           </span>
-                         )}
                       </div>
                     </div>
                     <button 
