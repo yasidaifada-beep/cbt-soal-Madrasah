@@ -17,6 +17,7 @@ export interface Exam {
   description: string;
   durationMinutes: number;
   status: 'draft' | 'active' | 'closed';
+  allowMultipleAttempts?: boolean;
   createdAt: any;
 }
 

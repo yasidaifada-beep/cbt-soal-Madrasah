@@ -111,8 +111,8 @@ export default function App() {
   };
 
   const GlobalFooter = () => (
-    <footer className="h-[0.5cm] flex items-center justify-center bg-white border-t border-gray-100 w-full fixed bottom-0 z-[100] shrink-0">
-      <p className="text-[10px] font-bold text-slate-400">muhammadimamsyafi'i@2026</p>
+    <footer className="h-[1cm] flex items-center justify-center bg-white border-t border-gray-100 w-full fixed bottom-0 z-[100] shrink-0">
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">MUHAMMADIMAMSYAFI'I@2026</p>
     </footer>
   );
 
@@ -124,7 +124,7 @@ export default function App() {
   );
 
   if (!user) return (
-    <div className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center p-4 sm:p-6 pb-[0.6cm]">
+    <div className="min-h-screen bg-[#FDFDFD] flex flex-col items-center justify-center p-4 sm:p-6 pb-[1.1cm]">
       <div className="max-w-md w-full bg-white rounded-[32px] sm:rounded-[40px] p-8 sm:p-12 shadow-2xl shadow-black/5 border border-gray-100 flex flex-col items-center text-center">
         <div className="w-16 h-16 sm:w-20 h-20 bg-[#1a1a1a] rounded-[20px] sm:rounded-[24px] flex items-center justify-center mb-6 sm:mb-8 shadow-xl shadow-black/20">
           <GraduationCap className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
@@ -163,7 +163,7 @@ export default function App() {
   if (activeView === 'identity' && selectedExamId) {
     const exam = exams.find(e => e.id === selectedExamId);
     return (
-      <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center p-4 sm:p-6 pb-[0.6cm]">
+      <div className="min-h-screen bg-[#FAFAFA] flex flex-col items-center justify-center p-4 sm:p-6 pb-[1.1cm]">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -222,7 +222,7 @@ export default function App() {
 
   if (activeView === 'admin' && profile?.role === 'admin') {
     return (
-      <div className="min-h-screen bg-white pb-[0.5cm]">
+      <div className="min-h-screen bg-white pb-[1.1cm]">
         <div className="bg-[#1a1a1a] p-3 flex justify-end px-4 sm:px-8">
            <button onClick={() => setActiveView('home')} className="text-[10px] sm:text-xs text-white/60 hover:text-white font-bold flex items-center gap-1">
              <ChevronRight className="rotate-180" size={14}/> KEMBALI KE BERANDA
@@ -235,7 +235,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] font-sans pb-[0.6cm]">
+    <div className="min-h-screen bg-[#FAFAFA] font-sans pb-[1.1cm]">
       <nav className="h-16 sm:h-20 bg-white border-b border-gray-100 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-20">
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[#1a1a1a] rounded-lg sm:rounded-xl flex items-center justify-center shrink-0">

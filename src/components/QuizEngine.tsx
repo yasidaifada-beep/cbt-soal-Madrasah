@@ -58,18 +58,20 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
       const user = auth.currentUser;
       if (!user) return;
       
-      const subId = `${user.uid}_${examId}`;
-      const subRef = doc(db, 'submissions', subId);
-      const subDoc = await getDoc(subRef);
+      const qSub = query(
+        collection(db, 'submissions'), 
+        where('examId', '==', examId), 
+        where('userId', '==', user.uid)
+      );
+      const subSnap = await getDocs(qSub);
+      
+      // Look for any attempt in progress
+      const activeSubDoc = subSnap.docs.find(d => d.data().status === 'started');
 
-      if (subDoc.exists()) {
-        const data = subDoc.data() as Submission;
-        if (data.status === 'submitted') {
-           onFinish(data.score || 0);
-           return;
-        }
+      if (activeSubDoc) {
+        const data = activeSubDoc.data() as Submission;
         setAnswers(data.answers || {});
-        setSubmissionId(subId);
+        setSubmissionId(activeSubDoc.id);
         
         // Calculate remaining time
         const startTime = data.startedAt.toDate().getTime();
@@ -78,8 +80,19 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
         const elapsed = now - startTime;
         setTimeLeft(Math.max(0, Math.floor((limit - elapsed) / 1000)));
       } else {
-        // Create new
-        await setDoc(subRef, {
+        // If no active, check if they finished before
+        const finishedSubs = subSnap.docs.filter(d => d.data().status === 'submitted');
+        
+        if (finishedSubs.length > 0 && !examData.allowMultipleAttempts) {
+           // Sort by latest submission if multiple (though normally only one if not allowed)
+           const latestFinished = finishedSubs.sort((a,b) => (b.data().submittedAt?.toMillis() || 0) - (a.data().submittedAt?.toMillis() || 0))[0];
+           onFinish(latestFinished.data().score || 0);
+           return;
+        }
+
+        // Create new submission with unique ID
+        const newSubRef = doc(collection(db, 'submissions')); 
+        await setDoc(newSubRef, {
           examId,
           userId: user.uid,
           studentName: studentName || 'Siswa',
@@ -88,7 +101,7 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
           startedAt: serverTimestamp(),
           answers: {}
         });
-        setSubmissionId(subId);
+        setSubmissionId(newSubRef.id);
         setTimeLeft(examData.durationMinutes * 60);
       }
       setLoading(false);
@@ -287,7 +300,7 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
   const currentQuestion = questions[currentIndex];
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-0.5cm)] bg-[#FDFDFD] overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-1cm)] bg-[#FDFDFD] overflow-hidden">
       {/* Confirmation Modal */}
       <AnimatePresence>
         {showConfirmModal && (
