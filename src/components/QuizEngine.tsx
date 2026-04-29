@@ -288,7 +288,7 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
   const currentQuestion = questions[currentIndex];
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-[#FDFDFD] overflow-hidden fixed inset-0">
+    <div className="flex flex-col lg:flex-row bg-[#FDFDFD] overflow-hidden fixed inset-0" style={{ height: '100dvh' }}>
       {/* Mobile Navigation Drawer Overlay */}
       <AnimatePresence>
         {showNav && (
@@ -424,7 +424,7 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
         </header>
 
         {/* Question Panel */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 pb-24 lg:pb-12">
+        <div id="question-panel" className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 pb-24 lg:pb-12 overscroll-contain">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
@@ -581,12 +581,16 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
         </div>
 
         {/* Footer Actions */}
-        <footer className="h-16 sm:h-24 border-t border-gray-100 flex items-center justify-between px-2 sm:px-8 bg-white z-20 shrink-0">
+        <footer className="h-16 sm:h-24 border-t border-gray-100 flex items-center justify-between px-2 sm:px-8 bg-white z-20 shrink-0 select-none">
           <div className="flex-1 flex justify-start">
             <button
               disabled={currentIndex === 0}
-              onClick={() => setCurrentIndex(prev => prev - 1)}
-              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 rounded-xl hover:bg-gray-100 disabled:opacity-20 transition-all font-bold text-gray-600 text-xs sm:text-base"
+              onClick={() => {
+                setCurrentIndex(prev => prev - 1);
+                // Scroll top of question panel
+                document.getElementById('question-panel')?.scrollTo(0,0);
+              }}
+              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 rounded-xl hover:bg-gray-100 disabled:opacity-20 transition-all font-bold text-gray-600 text-xs sm:text-base active:bg-gray-200"
             >
               <ChevronLeft size={16} className="sm:size-5" /> Prev
             </button>
@@ -596,7 +600,7 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
             <button
               onClick={toggleFlag}
               className={cn(
-                "flex items-center gap-1.5 sm:gap-2 px-4 sm:px-8 py-2 rounded-xl transition-all font-black border-2 text-[10px] sm:text-sm uppercase tracking-tight",
+                "flex items-center gap-1.5 sm:gap-2 px-4 sm:px-8 py-2 rounded-xl transition-all font-black border-2 text-[10px] sm:text-sm uppercase tracking-tight active:scale-95",
                 flags[currentQuestion.id] 
                   ? "bg-yellow-400 border-yellow-400 text-black shadow-inner" 
                   : "bg-white border-gray-100 text-gray-400 hover:border-gray-200"
@@ -612,14 +616,18 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
             {currentIndex === questions.length - 1 ? (
                <button
                 onClick={() => setShowConfirmModal(true)}
-                className="bg-green-600 text-white px-4 sm:px-8 py-2 rounded-xl flex items-center gap-1 sm:gap-2 hover:bg-green-700 transition-all font-bold shadow-lg shadow-green-600/20 text-xs sm:text-base"
+                className="bg-green-600 text-white px-4 sm:px-8 py-2 rounded-xl flex items-center gap-1 sm:gap-2 hover:bg-green-700 transition-all font-bold shadow-lg shadow-green-600/20 text-xs sm:text-base active:scale-95"
                >
                  <CheckCircle size={16} className="sm:size-5" /> Finish
                </button>
             ) : (
               <button
-                onClick={() => setCurrentIndex(prev => prev + 1)}
-                className="bg-[#1a1a1a] text-white px-4 sm:px-8 py-2 rounded-xl flex items-center gap-1 sm:gap-2 hover:bg-opacity-90 transition-all font-bold shadow-lg shadow-black/20 text-xs sm:text-base"
+                onClick={() => {
+                  setCurrentIndex(prev => prev + 1);
+                  // Scroll top of question panel
+                  document.getElementById('question-panel')?.scrollTo(0,0);
+                }}
+                className="bg-[#1a1a1a] text-white px-4 sm:px-8 py-2 rounded-xl flex items-center gap-1 sm:gap-2 hover:bg-opacity-90 transition-all font-bold shadow-lg shadow-black/20 text-xs sm:text-base active:scale-95"
               >
                  Next <ChevronRight size={16} className="sm:size-5" />
               </button>

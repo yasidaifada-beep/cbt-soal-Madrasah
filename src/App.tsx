@@ -148,15 +148,12 @@ export default function App() {
 
   if (activeView === 'exam' && selectedExamId) {
     return (
-      <>
-        <QuizEngine 
-          examId={selectedExamId} 
-          onFinish={onExamFinish} 
-          studentName={studentName}
-          participantNumber={participantNumber}
-        />
-        <GlobalFooter />
-      </>
+      <QuizEngine 
+        examId={selectedExamId} 
+        onFinish={onExamFinish} 
+        studentName={studentName}
+        participantNumber={participantNumber}
+      />
     );
   }
 
