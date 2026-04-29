@@ -23,6 +23,7 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
   const [flags, setFlags] = useState<Record<string, boolean>>({}); // Ragu-ragu
   const [submissionId, setSubmissionId] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [showNav, setShowNav] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [reviewData, setReviewData] = useState<{ score: number, results: any[] } | null>(null);
@@ -205,12 +206,12 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
               <h2 className="text-3xl sm:text-4xl font-black text-[#1a1a1a] mb-2 text-[28px] sm:text-[48px]">Ujian Selesai!</h2>
               <p className="text-gray-500 mb-8 max-w-md mx-auto text-sm sm:text-base">Selamat! Anda telah menyelesaikan ujian. Berikut adalah ringkasan hasil Anda.</p>
               
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 mb-12 w-full sm:w-auto">
-                <div className="bg-[#1a1a1a] text-white px-10 py-6 rounded-3xl text-center flex-1">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 mb-12 w-full sm:w-auto px-2 sm:px-0">
+                <div className="bg-[#1a1a1a] text-white px-6 sm:px-10 py-6 rounded-3xl text-center flex-1">
                   <div className="text-[10px] sm:text-xs font-black uppercase tracking-widest opacity-60 mb-1">Skor Akhir</div>
                   <div className="text-4xl sm:text-5xl font-black">{reviewData.score}</div>
                 </div>
-                <div className="bg-gray-50 px-10 py-6 rounded-3xl text-center border border-gray-100 flex-1">
+                <div className="bg-gray-50 px-6 sm:px-10 py-6 rounded-3xl text-center border border-gray-100 flex-1">
                   <div className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Jawaban Benar</div>
                   <div className="text-4xl sm:text-5xl font-black text-gray-800">
                     {reviewData.results.filter(r => r.isCorrect).length} <span className="text-xl sm:text-2xl text-gray-300">/ {questions.length}</span>
@@ -287,7 +288,73 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
   const currentQuestion = questions[currentIndex];
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-0.5cm)] bg-[#FDFDFD] overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-screen bg-[#FDFDFD] overflow-hidden fixed inset-0">
+      {/* Mobile Navigation Drawer Overlay */}
+      <AnimatePresence>
+        {showNav && (
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80] lg:hidden" onClick={() => setShowNav(false)}>
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="absolute right-0 top-0 bottom-0 w-4/5 max-w-sm bg-white shadow-2xl flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="font-extrabold text-gray-800 flex items-center gap-2">
+                  <ChevronRight size={20} className="text-indigo-600" /> Navigasi Soal
+                </h3>
+                <button onClick={() => setShowNav(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                  <X size={20} className="text-gray-400" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="grid grid-cols-5 gap-3">
+                  {questions.map((q, i) => {
+                    const isAnswered = !!answers[q.id];
+                    const isFlagged = flags[q.id];
+                    const isActive = currentIndex === i;
+                    return (
+                      <button
+                        key={q.id}
+                        onClick={() => {
+                          setCurrentIndex(i);
+                          setShowNav(false);
+                        }}
+                        className={cn(
+                          "aspect-square rounded-xl flex items-center justify-center text-sm font-bold transition-all relative border-2",
+                          isActive ? "scale-110 z-10 border-[#1a1a1a] shadow-lg ring-4 ring-black/5" : "border-transparent",
+                          isFlagged ? "bg-yellow-400 text-black" : isAnswered ? "bg-green-600 text-white" : "bg-gray-50 text-gray-400"
+                        )}
+                      >
+                        {i + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="p-6 bg-gray-50 border-t border-gray-100">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                    <span className="text-xs font-bold text-gray-500 uppercase">Sudah Dijawab</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+                    <span className="text-xs font-bold text-gray-500 uppercase">Ragu-ragu</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-gray-200 rounded-full"></div>
+                    <span className="text-xs font-bold text-gray-500 uppercase">Belum Dijawab</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Confirmation Modal */}
       <AnimatePresence>
         {showConfirmModal && (
@@ -333,25 +400,31 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 bg-white border-r border-gray-100">
         {/* Header */}
-        <header className="h-14 sm:h-16 border-b border-gray-100 flex items-center justify-between px-4 sm:px-8 bg-white/80 backdrop-blur-md sticky top-0 z-10">
+        <header className="h-14 sm:h-16 border-b border-gray-100 flex items-center justify-between px-4 sm:px-8 bg-white z-20">
           <div className="flex items-center gap-2 sm:gap-4 truncate mr-2">
             <span className="font-bold text-sm sm:text-lg tracking-tight uppercase truncate">{exam?.title}</span>
             <div className="h-4 w-px bg-gray-200 shrink-0"></div>
             <span className="text-gray-500 font-mono text-[10px] sm:text-sm shrink-0">No. {currentIndex + 1} / {questions.length}</span>
           </div>
-          <div className="flex items-center gap-4 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <div className={cn(
-              "flex items-center gap-1.5 sm:gap-2 font-mono font-bold px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm",
+              "flex items-center gap-1.2 sm:gap-2 font-mono font-bold px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-sm",
               timeLeft < 300 ? "bg-red-50 text-red-500 animate-pulse" : "bg-gray-100 text-gray-700"
             )}>
-              <TimerIcon size={14} className="sm:size-[18px]" />
+              <TimerIcon size={12} className="sm:size-[18px]" />
               {formatTime(timeLeft)}
             </div>
+            <button 
+              onClick={() => setShowNav(true)}
+              className="lg:hidden p-2 bg-gray-50 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors"
+            >
+              <RefreshCw size={18} />
+            </button>
           </div>
         </header>
 
         {/* Question Panel */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 lg:p-12">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 pb-24 lg:pb-12">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
@@ -359,11 +432,11 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
-              className="max-w-4xl mx-auto"
+              className="max-w-4xl mx-auto w-full"
             >
-              <div className="mb-6 sm:mb-8">
+              <div className="mb-6 sm:mb-10">
                  <div className="text-[10px] font-black text-[#1a1a1a]/40 uppercase tracking-widest mb-2">Pertanyaan</div>
-                 <div className="text-lg sm:text-2xl font-medium leading-relaxed text-[#1a1a1a] prose prose-slate max-w-none">
+                 <div className="text-base sm:text-2xl font-medium leading-relaxed text-[#1a1a1a] prose prose-slate max-w-none">
                   <ReactMarkdown 
                     remarkPlugins={[remarkGfm]}
                     components={{
@@ -377,12 +450,14 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
                           }
                         }
                         return (
-                          <img 
-                            {...props} 
-                            src={src}
-                            className="rounded-xl border border-slate-200 block my-4 max-h-[400px] w-auto mx-auto shadow-md" 
-                            referrerPolicy="no-referrer" 
-                          />
+                          <div className="my-6 flex justify-center">
+                            <img 
+                              {...props} 
+                              src={src}
+                              className="rounded-xl border border-slate-200 block max-h-[300px] sm:max-h-[500px] w-auto shadow-lg hover:shadow-xl transition-shadow" 
+                              referrerPolicy="no-referrer" 
+                            />
+                          </div>
                         );
                       }
                     }}
@@ -393,7 +468,7 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
               </div>
 
               {/* Interaction Logic for different types */}
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 gap-3 sm:gap-4 mb-8">
                 {currentQuestion.type === 'complex_multiple_choice' && currentQuestion.options?.map((opt, i) => {
                   const label = String.fromCharCode(65 + i);
                   const currentAnswers = String(answers[currentQuestion.id] || '').split(',').map(s => s.trim()).filter(s => s);
@@ -506,48 +581,55 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
         </div>
 
         {/* Footer Actions */}
-        <footer className="h-20 sm:h-24 border-t border-gray-100 px-4 sm:px-8 flex items-center justify-between bg-white z-10">
-          <button
-            disabled={currentIndex === 0}
-            onClick={() => setCurrentIndex(prev => prev - 1)}
-            className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 rounded-full hover:bg-gray-100 disabled:opacity-20 transition-all font-bold text-gray-600 text-sm sm:text-base"
-          >
-            <ChevronLeft size={18} className="sm:size-5" /> <span className="hidden sm:inline">Sebelumnya</span><span className="sm:hidden">Prev</span>
-          </button>
-
-          <button
-            onClick={toggleFlag}
-            className={cn(
-              "flex items-center gap-1 sm:gap-2 px-3 sm:px-8 py-2 rounded-full transition-all font-bold border-2 text-[10px] sm:text-sm uppercase tracking-tight sm:tracking-normal",
-              flags[currentQuestion.id] 
-                ? "bg-yellow-400 border-yellow-400 text-black shadow-inner" 
-                : "bg-white border-gray-100 text-gray-400 hover:border-gray-200"
-            )}
-          >
-            <Flag size={14} className="sm:size-5" fill={flags[currentQuestion.id] ? "black" : "none"} /> 
-            {flags[currentQuestion.id] ? "Ragu" : "Ragu-ragu"}
-          </button>
-
-          {currentIndex === questions.length - 1 ? (
-             <button
-              onClick={() => setShowConfirmModal(true)}
-              className="bg-green-600 text-white px-4 sm:px-8 py-2 rounded-full flex items-center gap-1 sm:gap-2 hover:bg-green-700 transition-all font-bold shadow-lg shadow-green-600/20 text-sm sm:text-base"
-             >
-               <CheckCircle size={18} className="sm:size-5" /> Selesai
-             </button>
-          ) : (
+        <footer className="h-16 sm:h-24 border-t border-gray-100 flex items-center justify-between px-2 sm:px-8 bg-white z-20 shrink-0">
+          <div className="flex-1 flex justify-start">
             <button
-              onClick={() => setCurrentIndex(prev => prev + 1)}
-              className="bg-[#1a1a1a] text-white px-4 sm:px-8 py-2 rounded-full flex items-center gap-1 sm:gap-2 hover:bg-opacity-90 transition-all font-bold shadow-lg shadow-black/20 text-sm sm:text-base"
+              disabled={currentIndex === 0}
+              onClick={() => setCurrentIndex(prev => prev - 1)}
+              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 rounded-xl hover:bg-gray-100 disabled:opacity-20 transition-all font-bold text-gray-600 text-xs sm:text-base"
             >
-               <span className="hidden sm:inline">Berikutnya</span><span className="sm:hidden">Next</span> <ChevronRight size={18} className="sm:size-5" />
+              <ChevronLeft size={16} className="sm:size-5" /> Prev
             </button>
-          )}
+          </div>
+
+          <div className="flex-1 flex justify-center">
+            <button
+              onClick={toggleFlag}
+              className={cn(
+                "flex items-center gap-1.5 sm:gap-2 px-4 sm:px-8 py-2 rounded-xl transition-all font-black border-2 text-[10px] sm:text-sm uppercase tracking-tight",
+                flags[currentQuestion.id] 
+                  ? "bg-yellow-400 border-yellow-400 text-black shadow-inner" 
+                  : "bg-white border-gray-100 text-gray-400 hover:border-gray-200"
+              )}
+            >
+              <Flag size={14} className="sm:size-5" fill={flags[currentQuestion.id] ? "black" : "none"} /> 
+              <span className="hidden sm:inline">{flags[currentQuestion.id] ? "Ragu" : "Ragu-ragu"}</span>
+              <span className="sm:hidden">Ragu</span>
+            </button>
+          </div>
+
+          <div className="flex-1 flex justify-end">
+            {currentIndex === questions.length - 1 ? (
+               <button
+                onClick={() => setShowConfirmModal(true)}
+                className="bg-green-600 text-white px-4 sm:px-8 py-2 rounded-xl flex items-center gap-1 sm:gap-2 hover:bg-green-700 transition-all font-bold shadow-lg shadow-green-600/20 text-xs sm:text-base"
+               >
+                 <CheckCircle size={16} className="sm:size-5" /> Finish
+               </button>
+            ) : (
+              <button
+                onClick={() => setCurrentIndex(prev => prev + 1)}
+                className="bg-[#1a1a1a] text-white px-4 sm:px-8 py-2 rounded-xl flex items-center gap-1 sm:gap-2 hover:bg-opacity-90 transition-all font-bold shadow-lg shadow-black/20 text-xs sm:text-base"
+              >
+                 Next <ChevronRight size={16} className="sm:size-5" />
+              </button>
+            )}
+          </div>
         </footer>
       </main>
 
-      {/* Navigation Grid (Sidebar) */}
-      <aside className="h-[250px] lg:h-full w-full lg:w-80 bg-gray-50 border-t lg:border-t-0 lg:border-l border-gray-100 flex flex-col shrink-0">
+      {/* Navigation Grid (Sidebar) - Desktop Only */}
+      <aside className="hidden lg:flex h-full w-80 bg-gray-50 border-l border-gray-100 flex-col shrink-0">
          <div className="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center lg:block">
             <div>
               <h3 className="font-bold text-gray-700 flex items-center gap-2 text-sm sm:text-base">
