@@ -559,7 +559,18 @@ export default function AdminDashboard() {
                             <span className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center font-black text-slate-400 text-[10px] shrink-0">{i+1}</span>
                             <div className="flex-1 min-w-0">
                               <div className="font-medium text-slate-800 mb-4 sm:mb-6 text-sm sm:text-lg leading-relaxed prose prose-slate max-w-none">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                <ReactMarkdown 
+                                  remarkPlugins={[remarkGfm]}
+                                  components={{
+                                    img: ({node, ...props}) => (
+                                      <img 
+                                        {...props} 
+                                        className="rounded-lg border border-slate-200 block my-2 max-h-[200px] w-auto mx-auto" 
+                                        referrerPolicy="no-referrer" 
+                                      />
+                                    )
+                                  }}
+                                >
                                   {q.text}
                                 </ReactMarkdown>
                               </div>
@@ -871,7 +882,18 @@ export default function AdminDashboard() {
                                   ) : (
                                     <>
                                       <div className="text-slate-800 font-medium leading-relaxed mb-4 text-sm sm:text-base prose prose-slate max-w-none">
-                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                        <ReactMarkdown 
+                                          remarkPlugins={[remarkGfm]}
+                                          components={{
+                                            img: ({node, ...props}) => (
+                                              <img 
+                                                {...props} 
+                                                className="rounded-md border border-slate-200 block my-1 max-h-[150px] w-auto" 
+                                                referrerPolicy="no-referrer" 
+                                              />
+                                            )
+                                          }}
+                                        >
                                           {q.text}
                                         </ReactMarkdown>
                                       </div>

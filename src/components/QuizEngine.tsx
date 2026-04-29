@@ -364,7 +364,18 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
               <div className="mb-6 sm:mb-8">
                  <div className="text-[10px] font-black text-[#1a1a1a]/40 uppercase tracking-widest mb-2">Pertanyaan</div>
                  <div className="text-lg sm:text-2xl font-medium leading-relaxed text-[#1a1a1a] prose prose-slate max-w-none">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      img: ({node, ...props}) => (
+                        <img 
+                          {...props} 
+                          className="rounded-xl border border-slate-200 block my-4 max-h-[400px] w-auto mx-auto shadow-md" 
+                          referrerPolicy="no-referrer" 
+                        />
+                      )
+                    }}
+                  >
                     {currentQuestion.text}
                   </ReactMarkdown>
                  </div>
