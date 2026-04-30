@@ -20,6 +20,7 @@ export default function App() {
   const [finishedScore, setFinishedScore] = useState<number | null>(null);
   const [studentName, setStudentName] = useState('');
   const [participantNumber, setParticipantNumber] = useState('');
+  const [schoolName, setSchoolName] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
@@ -97,8 +98,8 @@ export default function App() {
   };
 
   const confirmIdentityAndStart = () => {
-    if (!studentName.trim() || !participantNumber.trim()) {
-      alert("Harap lengkapi Nama dan Nomor Peserta!");
+    if (!studentName.trim() || !participantNumber.trim() || !schoolName.trim()) {
+      alert("Harap lengkapi Nama, Nomor Peserta, dan Asal Madrasah!");
       return;
     }
     setActiveView('exam');
@@ -111,8 +112,8 @@ export default function App() {
   };
 
   const GlobalFooter = () => (
-    <footer className="h-[0.5cm] flex items-center justify-center bg-white border-t border-gray-100 w-full fixed bottom-0 z-[100] shrink-0">
-      <p className="text-[10px] font-bold text-slate-400">muhammadimamsyafi'i@2026</p>
+    <footer className="h-[1cm] flex items-center justify-center bg-[#1a1a1a] w-full fixed bottom-0 z-[100] shrink-0">
+      <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">muhammadimamsyafi'i@2026</p>
     </footer>
   );
 
@@ -153,6 +154,7 @@ export default function App() {
         onFinish={onExamFinish} 
         studentName={studentName}
         participantNumber={participantNumber}
+        schoolName={schoolName}
       />
     );
   }
@@ -195,20 +197,30 @@ export default function App() {
                 className="w-full bg-gray-50 p-4 rounded-xl border border-gray-100 outline-none focus:border-[#1a1a1a] focus:ring-4 focus:ring-black/5 transition-all font-bold"
               />
             </div>
+            <div>
+              <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1 mb-1 block">Asal Madrasah / Lembaga</label>
+              <input 
+                type="text"
+                value={schoolName}
+                onChange={(e) => setSchoolName(e.target.value)}
+                placeholder="Contoh: MA Negeri 1 Jakata"
+                className="w-full bg-gray-50 p-4 rounded-xl border border-gray-100 outline-none focus:border-[#1a1a1a] focus:ring-4 focus:ring-black/5 transition-all font-bold"
+              />
+            </div>
           </div>
 
           <div className="mt-10 flex flex-col gap-3">
             <button 
               onClick={confirmIdentityAndStart}
-              className="w-full bg-[#1a1a1a] text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-black/10 hover:bg-opacity-90 active:scale-95 transition-all"
+              className="w-full bg-[#1a1a1a] text-white py-4 rounded-xl font-black flex items-center justify-center gap-2 shadow-lg shadow-black/10 hover:bg-opacity-90 active:scale-95 transition-all uppercase tracking-widest"
             >
               KONFIRMASI & MULAI <ChevronRight size={18} />
             </button>
             <button 
               onClick={() => setActiveView('home')}
-              className="w-full py-4 text-gray-400 font-bold text-sm hover:text-gray-600"
+              className="w-full py-4 text-gray-400 font-bold text-sm hover:text-gray-600 uppercase tracking-widest"
             >
-              Batalkan
+              BATALKAN
             </button>
           </div>
         </motion.div>
@@ -309,9 +321,9 @@ export default function App() {
               </div>
               <button 
                 onClick={() => startExam(exam.id)}
-                className="w-full bg-[#1a1a1a] text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all active:scale-95 text-sm sm:text-base"
+                className="w-full bg-[#1a1a1a] text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-opacity-90 transition-all active:scale-95 text-sm sm:text-base uppercase tracking-widest"
               >
-                Mulai Ujian <ChevronRight size={16} />
+                MULAI UJIAN <ChevronRight size={16} />
               </button>
             </div>
           ))}

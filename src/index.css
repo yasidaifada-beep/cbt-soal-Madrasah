@@ -1,2 +1,8 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+
+@layer base {
+  html, body, #root {
+    @apply min-h-screen w-full m-0 p-0;
+  }
+}

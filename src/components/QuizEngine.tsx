@@ -3,7 +3,7 @@ import { doc, getDoc, setDoc, onSnapshot, updateDoc, collection, getDocs, query,
 import { db, auth, handleFirestoreError, OperationType } from '../lib/firebase';
 import { Exam, Question, Submission } from '../types';
 import { cn } from '../lib/utils';
-import { ChevronLeft, ChevronRight, Timer as TimerIcon, CheckCircle, Flag, XCircle, AlertTriangle, RefreshCw, Home, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Timer as TimerIcon, CheckCircle, Flag, XCircle, AlertTriangle, RefreshCw, Home, X, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -13,9 +13,10 @@ interface QuizEngineProps {
   onFinish: (score: number) => void;
   studentName?: string;
   participantNumber?: string;
+  schoolName?: string;
 }
 
-export default function QuizEngine({ examId, onFinish, studentName, participantNumber }: QuizEngineProps) {
+export default function QuizEngine({ examId, onFinish, studentName, participantNumber, schoolName }: QuizEngineProps) {
   const [exam, setExam] = useState<Exam | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -57,7 +58,10 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
 
       // 3. Find or Create Submission
       const user = auth.currentUser;
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
       
       const subId = `${user.uid}_${examId}`;
       const subRef = doc(db, 'submissions', subId);
@@ -85,6 +89,7 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
           userId: user.uid,
           studentName: studentName || 'Siswa',
           participantNumber: participantNumber || '-',
+          schoolName: schoolName || '-',
           status: 'started',
           startedAt: serverTimestamp(),
           answers: {}
@@ -95,6 +100,7 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
       setLoading(false);
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, `exams/${examId}`);
+      setLoading(false);
     }
   };
 
@@ -204,6 +210,24 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
                 <CheckCircle size={40} className="text-green-500 sm:size-16" />
               </div>
               <h2 className="text-3xl sm:text-4xl font-black text-[#1a1a1a] mb-2 text-[28px] sm:text-[48px]">Ujian Selesai!</h2>
+              
+              <div className="bg-slate-50 rounded-2xl p-6 mb-8 w-full border border-slate-100 flex flex-col gap-4 text-left">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a]/40 mb-1">Nama Peserta</div>
+                    <div className="font-bold text-[#1a1a1a] uppercase">{studentName}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a]/40 mb-1">Nomor Peserta</div>
+                    <div className="font-bold text-[#1a1a1a] uppercase">{participantNumber}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-[#1a1a1a]/40 mb-1">Asal Madrasah</div>
+                    <div className="font-bold text-[#1a1a1a] uppercase">{schoolName}</div>
+                  </div>
+                </div>
+              </div>
+
               <p className="text-gray-500 mb-8 max-w-md mx-auto text-sm sm:text-base">Selamat! Anda telah menyelesaikan ujian. Berikut adalah ringkasan hasil Anda.</p>
               
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 mb-12 w-full sm:w-auto px-2 sm:px-0">
@@ -288,7 +312,21 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
   const currentQuestion = questions[currentIndex];
 
   return (
-    <div className="flex flex-col lg:flex-row bg-[#FDFDFD] overflow-hidden fixed inset-0" style={{ height: '100dvh' }}>
+    <div className="flex flex-col lg:flex-row bg-[#FDFDFD] fixed inset-0 w-full overflow-hidden" style={{ height: '100dvh' }}>
+      {/* Fallback for no user or error */}
+      {!loading && !exam && (
+        <div className="fixed inset-0 bg-white z-[200] flex flex-col items-center justify-center p-8 text-center">
+          <AlertTriangle size={48} className="text-yellow-500 mb-4" />
+          <h2 className="text-xl font-bold mb-2">Gagal Memuat Ujian</h2>
+          <p className="text-gray-500 mb-6">Pastikan Anda sudah masuk dan koneksi internet stabil.</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-[#1a1a1a] text-white px-8 py-3 rounded-xl font-bold"
+          >
+            REFRESH HALAMAN
+          </button>
+        </div>
+      )}
       {/* Mobile Navigation Drawer Overlay */}
       <AnimatePresence>
         {showNav && (
@@ -323,7 +361,7 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
                           setShowNav(false);
                         }}
                         className={cn(
-                          "aspect-square rounded-xl flex items-center justify-center text-sm font-bold transition-all relative border-2",
+                          "aspect-square rounded-xl flex items-center justify-center text-sm font-bold transition-all relative border-2 active:scale-90",
                           isActive ? "scale-110 z-10 border-[#1a1a1a] shadow-lg ring-4 ring-black/5" : "border-transparent",
                           isFlagged ? "bg-yellow-400 text-black" : isAnswered ? "bg-green-600 text-white" : "bg-gray-50 text-gray-400"
                         )}
@@ -398,13 +436,13 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
       </AnimatePresence>
       
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 bg-white border-r border-gray-100">
+      <main className="flex-1 flex flex-col min-h-0 bg-white border-r border-gray-100 overflow-hidden relative">
         {/* Header */}
         <header className="h-14 sm:h-16 border-b border-gray-100 flex items-center justify-between px-4 sm:px-8 bg-white z-20">
           <div className="flex items-center gap-2 sm:gap-4 truncate mr-2">
-            <span className="font-bold text-sm sm:text-lg tracking-tight uppercase truncate">{exam?.title}</span>
+            <span className="font-black text-xs sm:text-lg tracking-tight uppercase truncate">{exam?.title}</span>
             <div className="h-4 w-px bg-gray-200 shrink-0"></div>
-            <span className="text-gray-500 font-mono text-[10px] sm:text-sm shrink-0">No. {currentIndex + 1} / {questions.length}</span>
+            <span className="text-gray-500 font-mono text-[10px] sm:text-sm shrink-0 uppercase">Soal {currentIndex + 1} / {questions.length}</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <div className={cn(
@@ -416,15 +454,19 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
             </div>
             <button 
               onClick={() => setShowNav(true)}
-              className="lg:hidden p-2 bg-gray-50 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors"
+              className="lg:hidden p-2 bg-indigo-50 rounded-xl text-indigo-600 hover:bg-indigo-100 transition-colors"
+              title="Navigasi Soal"
             >
-              <RefreshCw size={18} />
+              <FileText size={20} />
             </button>
           </div>
         </header>
 
         {/* Question Panel */}
-        <div id="question-panel" className="flex-1 overflow-y-auto p-4 sm:p-8 lg:p-12 pb-24 lg:pb-12 overscroll-contain">
+        <div 
+          id="question-panel" 
+          className="flex-1 overflow-y-auto px-4 py-6 sm:p-8 lg:p-12 pb-40 sm:pb-40 bg-white"
+        >
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
@@ -435,7 +477,7 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
               className="max-w-4xl mx-auto w-full"
             >
               <div className="mb-6 sm:mb-10">
-                 <div className="text-[10px] font-black text-[#1a1a1a]/40 uppercase tracking-widest mb-2">Pertanyaan</div>
+                 <div className="text-[10px] font-black text-[#1a1a1a]/40 uppercase tracking-widest mb-2">PERTANYAAN</div>
                  <div className="text-base sm:text-2xl font-medium leading-relaxed text-[#1a1a1a] prose prose-slate max-w-none">
                   <ReactMarkdown 
                     remarkPlugins={[remarkGfm]}
@@ -581,7 +623,7 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
         </div>
 
         {/* Footer Actions */}
-        <footer className="h-16 sm:h-24 border-t border-gray-100 flex items-center justify-between px-2 sm:px-8 bg-white z-20 shrink-0 select-none">
+        <footer className="h-[1cm] border-t border-white/10 flex items-center justify-between px-2 sm:px-8 bg-[#1a1a1a] text-white z-20 shrink-0 select-none shadow-[0_-4px_20px_rgba(0,0,0,0.1)] uppercase">
           <div className="flex-1 flex justify-start">
             <button
               disabled={currentIndex === 0}
@@ -590,9 +632,9 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
                 // Scroll top of question panel
                 document.getElementById('question-panel')?.scrollTo(0,0);
               }}
-              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-2 rounded-xl hover:bg-gray-100 disabled:opacity-20 transition-all font-bold text-gray-600 text-xs sm:text-base active:bg-gray-200"
+              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-6 py-1 rounded-lg hover:bg-white/10 disabled:opacity-20 transition-all font-black text-white/70 hover:text-white text-[10px] sm:text-xs uppercase active:bg-white/20"
             >
-              <ChevronLeft size={16} className="sm:size-5" /> Prev
+              <ChevronLeft size={14} className="sm:size-4" /> PREV
             </button>
           </div>
 
@@ -600,15 +642,15 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
             <button
               onClick={toggleFlag}
               className={cn(
-                "flex items-center gap-1.5 sm:gap-2 px-4 sm:px-8 py-2 rounded-xl transition-all font-black border-2 text-[10px] sm:text-sm uppercase tracking-tight active:scale-95",
+                "flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-1 rounded-lg transition-all font-black border text-[9px] sm:text-[10px] uppercase tracking-widest active:scale-95",
                 flags[currentQuestion.id] 
                   ? "bg-yellow-400 border-yellow-400 text-black shadow-inner" 
-                  : "bg-white border-gray-100 text-gray-400 hover:border-gray-200"
+                  : "bg-white/5 border-white/10 text-white/40 hover:border-white/20 hover:text-white/60"
               )}
             >
-              <Flag size={14} className="sm:size-5" fill={flags[currentQuestion.id] ? "black" : "none"} /> 
-              <span className="hidden sm:inline">{flags[currentQuestion.id] ? "Ragu" : "Ragu-ragu"}</span>
-              <span className="sm:hidden">Ragu</span>
+              <Flag size={12} className="sm:size-4" fill={flags[currentQuestion.id] ? "black" : "none"} /> 
+              <span className="hidden sm:inline">{flags[currentQuestion.id] ? "RAGU" : "RAGU-RAGU"}</span>
+              <span className="sm:hidden">RAGU-RAGU</span>
             </button>
           </div>
 
@@ -616,9 +658,9 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
             {currentIndex === questions.length - 1 ? (
                <button
                 onClick={() => setShowConfirmModal(true)}
-                className="bg-green-600 text-white px-4 sm:px-8 py-2 rounded-xl flex items-center gap-1 sm:gap-2 hover:bg-green-700 transition-all font-bold shadow-lg shadow-green-600/20 text-xs sm:text-base active:scale-95"
+                className="bg-green-600 text-white px-4 sm:px-6 py-1 rounded-lg flex items-center gap-1 sm:gap-2 hover:bg-green-700 transition-all font-black shadow-lg shadow-green-600/20 text-[10px] sm:text-xs uppercase active:scale-95"
                >
-                 <CheckCircle size={16} className="sm:size-5" /> Finish
+                 <CheckCircle size={14} className="sm:size-4" /> FINISH
                </button>
             ) : (
               <button
@@ -627,9 +669,9 @@ export default function QuizEngine({ examId, onFinish, studentName, participantN
                   // Scroll top of question panel
                   document.getElementById('question-panel')?.scrollTo(0,0);
                 }}
-                className="bg-[#1a1a1a] text-white px-4 sm:px-8 py-2 rounded-xl flex items-center gap-1 sm:gap-2 hover:bg-opacity-90 transition-all font-bold shadow-lg shadow-black/20 text-xs sm:text-base active:scale-95"
+                className="bg-white text-black px-4 sm:px-6 py-1 rounded-lg flex items-center gap-1 sm:gap-2 hover:bg-white/90 transition-all font-black shadow-lg shadow-white/10 text-[10px] sm:text-xs uppercase active:scale-95"
               >
-                 Next <ChevronRight size={16} className="sm:size-5" />
+                 NEXT <ChevronRight size={14} className="sm:size-4" />
               </button>
             )}
           </div>

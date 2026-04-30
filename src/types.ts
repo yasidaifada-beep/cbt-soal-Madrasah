@@ -33,6 +33,7 @@ export interface Submission {
   userId: string;
   studentName?: string;
   participantNumber?: string;
+  schoolName?: string;
   answers: Record<string, any>;
   status: 'started' | 'submitted';
   startedAt: any;
